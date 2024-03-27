@@ -10,8 +10,10 @@ export default class Block {
     /**
      * Block constructor
      * @param index the index of the block
+     * @param timestamp the timestamp of the block
      * @param previousHash the hash of the previous block
      * @param data the data of the block
+     * @param hash the hash of the block
      */
     constructor(
         public index: number,
@@ -34,16 +36,16 @@ export default class Block {
     }
 
     /**
- * Check if the block is valid.
- *
- * @return {boolean} true if the block is valid, false otherwise
- */
-isValid(): boolean {
-    if (this.index < 0) return false;
-    if (!this.previousHash) return false;
-    if (!this.data) return false;
-    if (this.timestamp < 1) return false;
-    if (!this.hash) return false;
-    return true;
-}
+    * Check if the block is valid.
+    *
+    * @return {boolean} true if the block is valid, false otherwise
+    */
+    isValid(previousHash: string, previousIndex: number): boolean {
+        if (this.index - 1 != previousIndex) return false;
+        if (this.previousHash != previousHash) return false;
+        if (!this.data) return false;
+        if (this.timestamp < 1) return false;
+        if (this.hash !== this.getHash()) return false;
+        return true;
+    }
 }

@@ -77,4 +77,10 @@ describe("Blockchain tests", () => {
         expect(valid.message).not.toBe("");
         expect(valid.success).toBe(false);
     });
+
+    test("Should get block", () => {
+        const blockchain = new Blockchain();
+        const block = blockchain.getBlock(blockchain.blocks[0].hash);
+        expect(block).toEqual(blockchain.blocks[0]);
+    });
 });

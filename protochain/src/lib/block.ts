@@ -5,27 +5,22 @@ import Validation from "./validation";
  * Block class
  */
 export default class Block {
+    index: number;
     timestamp: number;
+    previousHash: string;
+    data: string;
     hash: string;
 
     /**
      * Block constructor
-     * @param index the index of the block
-     * @param timestamp the timestamp of the block
-     * @param previousHash the hash of the previous block
-     * @param data the data of the block
-     * @param hash the hash of the block
+     * @param block the block data
      */
-    constructor(
-        public index: number,
-        public previousHash: string,
-        public data: string,
-        ) {
-            this.index = index;
-            this.timestamp = Date.now();
-            this.previousHash = previousHash;
-            this.data = data;
-            this.hash = this.getHash();
+    constructor(block?: Block) {
+            this.index = block?.index || 0;
+            this.timestamp = block?.timestamp || Date.now();
+            this.previousHash = block?.previousHash || "";
+            this.data = block?.data || "";
+            this.hash = block?.hash || this.getHash();
     }
 
     /**

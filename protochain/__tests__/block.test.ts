@@ -5,10 +5,20 @@ describe("Block tests", () => {
 
     let genesis: Block;
 
-    beforeAll(() => { genesis = new Block(0, "", "Genesis block") });
+    beforeAll(() => {
+        let blockData = {
+            data:"Genesis block"
+        } as Block;
+        genesis = new Block(blockData); 
+    });
 
     test("should be valid", () => {
-        const block = new Block(1, genesis.hash, "data block 2");
+        let blockData = {
+            index: 1,
+            previousHash:genesis.hash,
+            data:"data block 2"
+        } as Block;
+        const block = new Block(blockData);
         const valid = block.isValid(genesis.hash, genesis.index);
 
         expect(valid.success).toBe(true);
@@ -16,8 +26,23 @@ describe("Block tests", () => {
         expect(valid.message).toBe("");
     });
 
+    test("should NOT be valid (fallbacks)", () => {
+        const block = new Block(); // Empty block. When we use the default values we are unable to fill the previousHash with the hash value of the previous block.
+        
+        const valid = block.isValid(genesis.hash, genesis.index);
+
+        expect(valid.success).toBe(false);
+        expect(valid.success).toBeFalsy();
+        expect(valid.message).not.toBe("");
+    });
+
     test("should not be valid (index)", () => {
-        const block = new Block(-1, genesis.hash, "data block 2");
+        let blockData = {
+            index: -1,
+            previousHash:genesis.hash,
+            data:"data block 2"
+        } as Block;
+        const block = new Block(blockData);
         const valid = block.isValid(genesis.hash, genesis.index);
 
         expect(valid.success).toBe(false);
@@ -26,7 +51,12 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (previous hash)", () => {
-        const block = new Block(1, genesis.hash + "1", "data block 2");
+        let blockData = {
+            index: 1,
+            previousHash:genesis.hash + '1',
+            data:"data block 2"
+        } as Block;
+        const block = new Block(blockData);
         const valid = block.isValid(genesis.hash, genesis.index);
 
         expect(valid.success).toBe(false);
@@ -34,7 +64,12 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (data)", () => {
-        const block = new Block(1, genesis.hash, "");
+        let blockData = {
+            index: 1,
+            previousHash:genesis.hash,
+            data:""
+        } as Block;
+        const block = new Block(blockData);
         const valid = block.isValid(genesis.hash, genesis.index);
 
         expect(valid.success).toBe(false);
@@ -42,7 +77,13 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (timestamp)", () => {
-        const block = new Block(1, genesis.hash, "data block 2");
+        let blockData = {
+            index: 1,
+            previousHash:genesis.hash,
+            data:"data block 2"
+        } as Block;
+        const block = new Block(blockData);
+        
         block.timestamp = -2;
 
         const valid = block.isValid(genesis.hash, genesis.index);
@@ -52,7 +93,13 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (hash)", () => {
-        const block = new Block(1, genesis.hash, "data block 2");
+        let blockData = {
+            index: 1,
+            previousHash:genesis.hash,
+            data:"data block 2"
+        } as Block;
+        const block = new Block(blockData);
+        
         block.hash = "";
         
         const valid = block.isValid(genesis.hash, genesis.index);

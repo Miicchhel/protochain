@@ -1,6 +1,8 @@
-import { describe, test, expect } from "@jest/globals"
-import Blockchain from '../src/lib/blockchain';
+import { describe, test, expect, jest } from "@jest/globals"
+import Blockchain from "../src/lib/blockchain";
 import Block from "../src/lib/block";
+
+jest.mock("../src/lib/block")
 
 describe("Blockchain tests", () => {
     
@@ -21,8 +23,19 @@ describe("Blockchain tests", () => {
     test("Should be valid (add block)", () => {
         const blockchain = new Blockchain();
         
-        blockchain.addBlock(new Block(1, blockchain.blocks[0].hash, "data block 2"));
-        const valid = blockchain.addBlock(new Block(2, blockchain.blocks[1].hash, "data block 3"));
+        let blockData = {
+            index: 1,
+            previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash,
+            data:"data block 2"
+        } as Block;
+        blockchain.addBlock(new Block(blockData));
+
+        blockData = {
+            index: 2,
+            previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash,
+            data:"data block 3"
+        } as Block;
+        const valid = blockchain.addBlock(new Block(blockData));
 
         expect(valid.message).toBe("");
         expect(valid.success).toBe(true);
@@ -31,8 +44,13 @@ describe("Blockchain tests", () => {
 
     test("Should not be valid (add block): index error", () => {
         const blockchain = new Blockchain();
-        
-        let valid = blockchain.addBlock(new Block(-1, blockchain.blocks[0].hash, "data block 2"));
+
+        let blockData = {
+            index: -1,
+            previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash,
+            data:"data block 2"
+        } as Block;
+        let valid = blockchain.addBlock(new Block(blockData));
 
         expect(valid.message).not.toBe("");
         expect(valid.success).toBe(false);
@@ -42,8 +60,13 @@ describe("Blockchain tests", () => {
 
     test("Should not be valid (add block): previous hash error", () => {
         const blockchain = new Blockchain();
-        
-        let valid = blockchain.addBlock(new Block(1, blockchain.blocks[0].hash + '1', "data block 2"));
+    
+        let blockData = {
+            index: 1,
+            previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash + '1',
+            data:"data block 2"
+        } as Block;
+        let valid = blockchain.addBlock(new Block(blockData));
 
         expect(valid.message).not.toBe("");
         expect(valid.success).toBe(false);
@@ -54,7 +77,13 @@ describe("Blockchain tests", () => {
         const blockchain = new Blockchain();
 
         for (let i = 1; i <= 5; i++) {
-            blockchain.addBlock(new Block(i, blockchain.blocks[i-1].hash, `data block ${i}`));
+
+            let blockData = {
+                index: i,
+                previousHash:blockchain.blocks[i- 1].hash,
+                data: `data block ${i}`
+            } as Block;
+            blockchain.addBlock(new Block(blockData));
         }
         
         const valid = blockchain.isValid();
@@ -67,15 +96,21 @@ describe("Blockchain tests", () => {
         const blockchain = new Blockchain();
         
         for (let i = 1; i <= 5; i++) {
-            blockchain.addBlock(new Block(i, blockchain.blocks[i-1].hash, `data block ${i}`));
+            
+            let blockData = {
+                index: i,
+                previousHash:blockchain.blocks[i- 1].hash,
+                data: `data block ${i}`
+            } as Block;
+            blockchain.addBlock(new Block(blockData));
         }
         
-        blockchain.blocks[1].data = "a transfera para b";
+        blockchain.blocks[1].index = -1;
         
         const valid = blockchain.isValid();
 
-        expect(valid.message).not.toBe("");
         expect(valid.success).toBe(false);
+        expect(valid.message).not.toBe("");
     });
 
     test("Should get block", () => {

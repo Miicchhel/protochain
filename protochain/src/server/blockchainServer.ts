@@ -11,7 +11,6 @@ app.use(morgan('tiny'));
 app.use(express.json());
 
 const blockchain = new Blockchain();
-blockchain.addBlock(new Block(1, blockchain.blocks[blockchain.blocks.length - 1].hash,"data block 1"));
 
 // hostname -I: get the computer's IP address
 app.listen(PORT, '0.0.0.0', () => {
@@ -39,4 +38,13 @@ app.get('/blocks/:indexOrHash', (req, res, next) => {
     } else {
         return res.json(block);
     }
+});
+
+app.post('/blocks', (req, res, next) => {
+    if (req.body.hash === undefined) return res.status(422).send('Unprocessable Entity: Invalid or incomplete data. Missing hash!');
+
+    const block = new Block(req.body as Block);
+    const validation = blockchain.addBlock(block);
+
+    (validation.success) ? res.status(200).json(block) : res.status(400).json(validation);
 });

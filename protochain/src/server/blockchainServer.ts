@@ -7,15 +7,18 @@ const PORT: number = 3000;
 
 const app = express();
 
-app.use(morgan('tiny'));
+
+if (process.argv.includes('--run')) {
+    app.use(morgan('tiny'));
+
+    // hostname -I: get the computer's IP address
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log(`Blockchain server is running at ${PORT}`);
+    });
+}
 app.use(express.json());
 
 const blockchain = new Blockchain();
-
-// hostname -I: get the computer's IP address
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Blockchain server is running at ${PORT}`);
-});
 
 app.get('/status', (_req, res, next) => {
     res.json({
@@ -48,3 +51,5 @@ app.post('/blocks', (req, res, next) => {
 
     (validation.success) ? res.status(200).json(block) : res.status(400).json(validation);
 });
+
+export { app };

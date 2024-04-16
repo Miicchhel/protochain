@@ -286,7 +286,43 @@ Vamos desenvolver, passo a passo, 4 componentes que juntas formam nossa soluçã
         ~~~bash
         npm run dev
         ~~~
+
+9. Para os testes unitários usaremos o `JEST`:
+    1. instalando as dependências:
+        ~~~bash
+        npm i -D jest ts-jest @types/jest
+        ~~~
+    2. inicializando o jest:
+        ~~~bash
+        npx jest --init
+        ~~~
+    3. após instalado, deixamos nosso `jest.config.ts` desta forma:
+        ~~~ts
+        const config: Config = {  
+        collectCoverageFrom: ["<rootDir>/src/lib/**/*.ts"],
+        coverageDirectory: "coverage",
+        coverageProvider: "v8",
+        coverageReporters: ["text","lcov"],
+        preset: "ts-jest",
+        testMatch: ["**/__tests__/**/*.ts"],
+        };
+        ~~~
+    4. criamos a pasta `__tests__` será usada pelos nossos testes.
+        >aqui criaremos os nossos testes seguindo esse padrão: `[nome].test.ts`.
     
-    
+    5. no `tsconfig.json` acrescentamos:
+        ~~~json
+        "exclude": [
+            "__tests__",
+            "jest.config.ts"
+        ],
+        "ts-node": {
+            "transpileOnly": true
+        } 
+        ~~~
+    6. por fim, para rodar os testes, faça:
+        ~~~bash
+        npm test
+        ~~~
 </details>
 

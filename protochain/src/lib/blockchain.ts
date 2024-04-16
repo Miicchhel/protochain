@@ -1,4 +1,5 @@
 import Block from "./block";
+import BlockInfo from "./blockInfo";
 import Validation from "./validation";
 
 /**
@@ -8,6 +9,7 @@ export default class Blockchain {
     blocks: Block[];
     nextIndex: number = 0;
     static readonly DIFFICULTY_FACTOR: number = 5;
+    static readonly MAX_DIFFICULTY: number = 62;
 
     /**
      * Blockchain constructor
@@ -79,5 +81,28 @@ export default class Blockchain {
             if(!validation.success) return new Validation(false, `Invalid block #${currentBlock.index} : ${validation.message}`);
         }
         return new Validation();
+    }
+
+    /**
+     * Generates the fee per transaction
+     * @returns the fee per transaction
+     */
+    getFeePerTx(): number {
+        return 1;
+    }
+
+    /**
+     * Generates all the information needed for to mine a new block
+     * @returns information needed for to mine a new block
+     */
+    getNextBlock(): BlockInfo {
+        const index = this.blocks.length;
+        const previousHash = this.getLastBlock().hash
+        const difficulty = this.getDifficulty();
+        const maxdDifficulty = Blockchain.MAX_DIFFICULTY;
+        const feePerTx = this.getFeePerTx();
+        const data = new Date().toString(); // for testing purposes
+
+        return { index, previousHash, difficulty, maxdDifficulty, feePerTx, data } as BlockInfo;
     }
 }

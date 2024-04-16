@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import morgan from "morgan";
 import Blockchain from "../lib/blockchain";
 import Block from "../lib/block";
@@ -24,6 +24,10 @@ app.get('/status', (_req, res, next) => {
         isValid: blockchain.isValid(),
         lastBlock: blockchain.getLastBlock()
     });
+});
+
+app.get('/blocks/next', (req: Request, res: Response, next: NextFunction) => {
+    res.json(blockchain.getNextBlock());
 });
 
 app.get('/blocks/:indexOrHash', (req, res, next) => {

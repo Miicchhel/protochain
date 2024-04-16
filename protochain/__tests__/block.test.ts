@@ -3,8 +3,6 @@ import Block from '../src/lib/block';
 
 describe("Block tests", () => {
 
-    const exampleDifficulty = 1;
-    const exampleMiner = "Michel";
     let genesis: Block;
 
     beforeAll(() => {
@@ -21,11 +19,8 @@ describe("Block tests", () => {
             data:"data block 2"
         } as Block;
         const block = new Block(blockData);
+        const valid = block.isValid(genesis.hash, genesis.index);
 
-        block.mine(exampleDifficulty, exampleMiner);
-        
-        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
-        
         expect(valid.success).toBe(true);
         expect(valid.success).toBeTruthy();
         expect(valid.message).toBe("");
@@ -34,7 +29,7 @@ describe("Block tests", () => {
     test("should NOT be valid (fallbacks)", () => {
         const block = new Block(); // Empty block. When we use the default values we are unable to fill the previousHash with the hash value of the previous block.
         
-        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
+        const valid = block.isValid(genesis.hash, genesis.index);
 
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
@@ -48,7 +43,7 @@ describe("Block tests", () => {
             data:"data block 2"
         } as Block;
         const block = new Block(blockData);
-        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
+        const valid = block.isValid(genesis.hash, genesis.index);
 
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
@@ -62,7 +57,7 @@ describe("Block tests", () => {
             data:"data block 2"
         } as Block;
         const block = new Block(blockData);
-        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
+        const valid = block.isValid(genesis.hash, genesis.index);
 
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
@@ -75,8 +70,8 @@ describe("Block tests", () => {
             data:""
         } as Block;
         const block = new Block(blockData);
-        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
-        
+        const valid = block.isValid(genesis.hash, genesis.index);
+
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
     });
@@ -91,13 +86,13 @@ describe("Block tests", () => {
         
         block.timestamp = -2;
 
-        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
+        const valid = block.isValid(genesis.hash, genesis.index);
 
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
     });
 
-    test("should not be valid (empty hash)", () => {
+    test("should not be valid (hash)", () => {
         let blockData = {
             index: 1,
             previousHash:genesis.hash,
@@ -105,29 +100,9 @@ describe("Block tests", () => {
         } as Block;
         const block = new Block(blockData);
         
-        block.mine(exampleDifficulty, exampleMiner);
-
         block.hash = "";
         
-        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);        
-
-        expect(valid.success).toBe(false);
-        expect(valid.success).toBeFalsy();
-    });
-
-    test("should not be valid (no mined)", () => {
-        let blockData = {
-            index: 1,
-            previousHash:genesis.hash,
-            data:"data block 2"
-        } as Block;
-        const block = new Block(blockData);
-        
-        // block.mine(exampleDifficulty, exampleMiner);
-        
-        block.miner = "";
-        
-        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
+        const valid = block.isValid(genesis.hash, genesis.index);
 
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();

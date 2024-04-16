@@ -122,11 +122,7 @@ describe("Block tests", () => {
             data:"data block 2"
         } as Block;
         const block = new Block(blockData);
-        
-        // block.mine(exampleDifficulty, exampleMiner);
-        
-        block.miner = "";
-        
+
         const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
 
         expect(valid.success).toBe(false);

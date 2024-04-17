@@ -8,7 +8,8 @@
     "start": "node ./dist/blockchain.js",
     "dev": "npx nodemon --watch ./src --exec 'ts-node ./src/lib/blockchain.ts' -e ts",
     "test": "jest",
-    "blockchain": "npx nodemon --watch ./src --exec 'ts-node ./src/server/blockchainServer.ts' -e ts --run"
+    "blockchain": "npx nodemon --watch ./src --exec 'ts-node ./src/server/blockchainServer.ts' -e ts --run",
+    "miner": "ts-node ./src/client/minerClient.ts"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +28,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "axios": "^1.6.8",
     "crypto-js": "^4.2.0",
     "express": "^4.19.2",
     "morgan": "^1.10.0"

@@ -1,5 +1,6 @@
 import sha256 from "crypto-js/sha256";
 import Validation from "./validation";
+import BlockInfo from "./blockInfo";
 
 /**
  * Block class
@@ -49,7 +50,6 @@ export default class Block {
     mine(difficulty: number, miner: string): void {
         this.miner = miner;
         const prefix = new Array(difficulty + 1).join("0");
-
         do {
             this.nonce++;
             this.hash = this.getHash();
@@ -70,15 +70,29 @@ export default class Block {
         if (this.timestamp < 1) return new Validation(false, "The block timestamp is invalid");
         if (!this.nonce || !this.miner) return new Validation(false, "The block was not mined.");
 
-        const prefix = new Array(difficulty +1).join("0");
+        const prefix = new Array(difficulty + 1).join("0");
         if (
             this.hash !== this.getHash() ||
             !this.hash.startsWith(prefix)
         ) {
-            return new Validation(false, "The block hash is invalid.");
+            return new Validation(false, "The block hash is invalid!!!!");
         }
 
-
         return new Validation();
+    }
+
+    /**
+     * Generates a new block based on the information from the '/blocks/next'
+     * @param blockInfo information to create and mine a new block
+     * @returns new block
+     */
+    static fromBlockInfo(blockInfo: BlockInfo): Block {
+        const block = new Block();
+
+        block.index = blockInfo.index;
+        block.previousHash = blockInfo.previousHash;
+        block.data = blockInfo.data;
+
+        return block
     }
 }

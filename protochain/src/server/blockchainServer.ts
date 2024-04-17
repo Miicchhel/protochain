@@ -7,7 +7,7 @@ const PORT: number = 3000;
 
 const app = express();
 
-
+/** Run the server */
 if (process.argv.includes('--run')) {
     app.use(morgan('tiny'));
 
@@ -18,7 +18,10 @@ app.use(express.json());
 
 const blockchain = new Blockchain();
 
-app.get('/status', (_req, res, next) => {
+/**
+ * GET /status - Should return status
+ */
+app.get('/status', (_req: Request, res: Response, _next: NextFunction) => {
     res.json({
         numberOfBlocks: blockchain.blocks.length,
         isValid: blockchain.isValid(),
@@ -26,11 +29,17 @@ app.get('/status', (_req, res, next) => {
     });
 });
 
-app.get('/blocks/next', (req: Request, res: Response, next: NextFunction) => {
+/**
+ * Get /blocks/next - Should get next block info to mine
+ */
+app.get('/blocks/next', (_req: Request, res: Response, _next: NextFunction) => {
     res.json(blockchain.getNextBlock());
 });
 
-app.get('/blocks/:indexOrHash', (req, res, next) => {
+/**
+ * Get /blocks/:indexOrHash - Should get block specified from the index or hash
+ */
+app.get('/blocks/:indexOrHash', (req: Request, res: Response, _next: NextFunction) => {
     let block;
     if (/^[0-9]+$/.test(req.params.indexOrHash)) {
         block = blockchain.blocks[parseInt(req.params.indexOrHash)];
@@ -45,7 +54,10 @@ app.get('/blocks/:indexOrHash', (req, res, next) => {
     }
 });
 
-app.post('/blocks', (req, res, next) => {
+/**
+ * Post /blocks - Should add block
+ */
+app.post('/blocks', (req: Request, res: Response, _next: NextFunction) => {
     if (req.body.hash === undefined) return res.status(422).send('Unprocessable Entity: Invalid or incomplete data. Missing hash!');
 
     const block = new Block(req.body as Block);

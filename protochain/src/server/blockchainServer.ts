@@ -8,6 +8,7 @@ const PORT: number = 3000;
 const app = express();
 
 /** Run the server */
+/* c8 ignore next 6 */
 if (process.argv.includes('--run')) {
     app.use(morgan('tiny'));
 

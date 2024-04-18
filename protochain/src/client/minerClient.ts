@@ -1,15 +1,21 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import axios from "axios";
 import Block from "../lib/block";
 import BlockInfo from "../lib/blockInfo";
 
-const BLOCKCHAIN_SERVER = "http://localhost:3000";
+const BLOCKCHAIN_SERVER = process.env.BLOCKCHAIN_SERVER;
+
 const minerWallet = {
     privateKey: "123456",
-    publicKey: "Michel_Melo_miner"
+    publicKey: `${process.env.MINER_WALLET}`
 };
+
 let totalMined = 0;
 
-console.log("Now we'll mine a new block!");
+console.log("Wellcome, Protominer: " + minerWallet.publicKey);
+console.log("Starting the process of mining...");
 async function mine() {
     console.log("Fetching information for the next block...");
     
@@ -36,9 +42,9 @@ async function mine() {
         console.log(error.response ? error.response.data : error.message);
     }
     
-    setTimeout(() => {
-        mine();
-    }, 1000);
+//     setTimeout(() => {
+//         mine();
+//     }, 1000);
 }
 
 mine();

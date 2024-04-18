@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeAll} from '@jest/globals'
 import Block from '../src/lib/block';
+import BlockInfo from '../src/lib/blockInfo';
 
 describe("Block tests", () => {
 
@@ -21,6 +22,27 @@ describe("Block tests", () => {
             data:"data block 2"
         } as Block;
         const block = new Block(blockData);
+
+        block.mine(exampleDifficulty, exampleMiner);
+        
+        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
+        
+        expect(valid.success).toBe(true);
+        expect(valid.success).toBeTruthy();
+        expect(valid.message).toBe("");
+    });
+
+    test("should create from block info", () => {
+        const block = Block.fromBlockInfo(
+            {
+                index: 1,
+                previousHash: genesis.hash,
+                difficulty: exampleDifficulty,
+                maxdDifficulty: 62,
+                feePerTx: 1,
+                data: 'testando o ProtoMiner: fromBlockInfo',
+            } as BlockInfo
+        );
 
         block.mine(exampleDifficulty, exampleMiner);
         

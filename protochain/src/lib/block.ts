@@ -27,7 +27,7 @@ export default class Block {
 
             /** this ensures that we have transaction objects and not just json objects */
             this.transactions = block?.transactions 
-                ? block?.transactions.map(tx => new Transaction(tx))
+                ? block.transactions.map(tx => new Transaction(tx))
                 : [] as Transaction[];
 
             this.nonce = block?.nonce || 0;

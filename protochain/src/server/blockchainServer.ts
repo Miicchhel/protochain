@@ -7,7 +7,7 @@ import Blockchain from "../lib/blockchain";
 import Block from "../lib/block";
 
 /* c8 ignore next */
-const PORT: number = parseInt(`${process.env.MINER_WALLET || 3000}`);
+const PORT: number = parseInt(`${process.env.BLOCKCHAIN_PORT || 3000}`);
 
 const app = express();
 

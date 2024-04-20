@@ -9,14 +9,17 @@ import Validation from "./validation";
  */
 export default class Blockchain {
     blocks: Block[];
+    mempool: Transaction[];
     nextIndex: number = 0;
     static readonly DIFFICULTY_FACTOR: number = 5;
     static readonly MAX_DIFFICULTY: number = 62;
+    static readonly PX_PER_BLOCK: number = 2;
 
     /**
      * Blockchain constructor
      */
     constructor() {
+        this.mempool = [];
         this.blocks = [
             new Block({
                 index: this.nextIndex, 
@@ -49,6 +52,29 @@ export default class Blockchain {
     }
 
     /**
+     * Adds a transaction to the mempool and performs validation checks.
+     *
+     * @param {Transaction} transaction - The transaction to be added.
+     * @return {Validation} The validation result of the transaction.
+     */
+    addTransaction(transaction: Transaction): Validation {
+        const validation = transaction.isValid();
+
+        if (!validation.success) 
+            return new Validation(false, "Invalid transaction: " + validation.message);
+
+        if (this.blocks.some(block => block.transactions.some(tx => tx.hash === transaction.hash)))
+            return new Validation(false, "Duplicated transaction in blockchain: " + validation.message);
+
+        if (this.mempool.some(tx => tx.hash === transaction.hash))
+            return new Validation(false, "Duplicated transaction in mempool: " + validation.message);
+
+        this.mempool.push(transaction);
+        
+        return new Validation(true, transaction.hash);
+    }
+
+    /**
      * Inserts a new block
      * @param newBlock the new block
      * @returns validation of the new block
@@ -60,10 +86,21 @@ export default class Blockchain {
 
         if(!validation.success) return new Validation(false, `Invalid block. ${validation.message}`);
         
+        const txs = newBlock.transactions
+            .filter(tx => tx.type !== TransactionType.FEE)
+            .map(tx => tx.hash);
+
+        const newMempool = this.mempool.filter(tx => !txs.includes(tx.hash));
+
+        if (newMempool.length + txs.length !== this.mempool.length)
+            return new Validation(false, "Invalid mempool. The block contains invalid transactions.");
+
+        this.mempool = newMempool; 
+
         this.blocks.push(newBlock);
         this.nextIndex++;
         
-        return new Validation();
+        return new Validation(true, newBlock.hash);
     }
 
     /**
@@ -102,17 +139,16 @@ export default class Blockchain {
      * Generates all the information needed for to mine a new block
      * @returns information needed for to mine a new block
      */
-    getNextBlock(): BlockInfo {
+    getNextBlock(): BlockInfo | null {
+        if(!this.mempool || this.mempool.length <= 0) 
+            return null;
+
         const index = this.blocks.length;
         const previousHash = this.getLastBlock().hash
         const difficulty = this.getDifficulty();
         const maxdDifficulty = Blockchain.MAX_DIFFICULTY;
         const feePerTx = this.getFeePerTx();
-        const transactions = [
-            new Transaction({
-                data: new Date().toString()
-            } as Transaction)
-        ] // for testing purposes
+        const transactions = this.mempool.slice(0, Blockchain.PX_PER_BLOCK); // for testing purposes
 
         return { index, previousHash, difficulty, maxdDifficulty, feePerTx, transactions } as BlockInfo;
     }

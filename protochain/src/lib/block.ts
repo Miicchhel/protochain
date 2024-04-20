@@ -1,6 +1,8 @@
 import sha256 from "crypto-js/sha256";
 import Validation from "./validation";
 import BlockInfo from "./blockInfo";
+import Transaction from "./transaction";
+import TransactionType from "./transactionType";
 
 /**
  * Block class
@@ -9,7 +11,7 @@ export default class Block {
     index: number;
     timestamp: number;
     previousHash: string;
-    data: string;
+    transactions: Transaction[];
     hash: string;
     nonce: number;
     miner: string;
@@ -22,7 +24,12 @@ export default class Block {
             this.index = block?.index || 0;
             this.timestamp = block?.timestamp || Date.now();
             this.previousHash = block?.previousHash || "";
-            this.data = block?.data || "";
+
+            /** this ensures that we have transaction objects and not just json objects */
+            this.transactions = block?.transactions 
+                ? block?.transactions.map(tx => new Transaction(tx))
+                : [] as Transaction[];
+
             this.nonce = block?.nonce || 0;
             this.miner = block?.miner || "";
             this.hash = block?.hash || this.getHash();
@@ -33,10 +40,16 @@ export default class Block {
      * @returns the hash of the block
      */
     getHash(): string {
+
+        const txs = this.transactions && this.transactions.length
+            ? this.transactions.map(tx => tx.hash).reduce((a,b) => a + b)
+            : "";
+        
         return sha256(
             this.index + 
             this.previousHash + 
-            this.data + this.timestamp + 
+            txs + 
+            this.timestamp + 
             this.nonce + 
             this.miner
         ).toString();
@@ -64,9 +77,21 @@ export default class Block {
      * @returns if the block is valid
      */
     isValid(previousHash: string, previousIndex: number, difficulty: number): Validation {
+
+        if (this.transactions && this.transactions.length) {
+            if (this.transactions.filter(tx => tx.type === TransactionType.FEE).length > 1) {
+                return new Validation(false, "There can only be one fee transaction per block.");
+            }
+
+            const validations = this.transactions.map(tx => tx.isValid());
+            const erros = validations.filter(v => !v.success).map(v => v.message);
+            if (erros.length > 0) {
+                return new Validation(false, "The block contains invalid transactions: " + erros.reduce((a,b) => a + b));
+            }
+        }
+
         if (this.index - 1 != previousIndex) return new Validation(false, "The block index is invalid.");
         if (this.previousHash != previousHash) return new Validation(false, "The block previous hash is invalid.");
-        if (!this.data) return new Validation(false, "The block data is invalid.");
         if (this.timestamp < 1) return new Validation(false, "The block timestamp is invalid");
         if (!this.nonce || !this.miner) return new Validation(false, "The block was not mined.");
 
@@ -91,7 +116,7 @@ export default class Block {
 
         block.index = blockInfo.index;
         block.previousHash = blockInfo.previousHash;
-        block.data = blockInfo.data;
+        block.transactions = blockInfo.transactions;
 
         return block
     }

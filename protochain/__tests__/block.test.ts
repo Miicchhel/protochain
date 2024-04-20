@@ -1,6 +1,8 @@
 import { describe, test, expect, beforeAll} from '@jest/globals'
 import Block from '../src/lib/block';
 import BlockInfo from '../src/lib/blockInfo';
+import Transaction from '../src/lib/transaction';
+import TransactionType from '../src/lib/transactionType';
 
 describe("Block tests", () => {
 
@@ -9,19 +11,27 @@ describe("Block tests", () => {
     let genesis: Block;
 
     beforeAll(() => {
-        let blockData = {
-            data:"Genesis block"
-        } as Block;
-        genesis = new Block(blockData); 
+        genesis = new Block({
+            transactions: [
+                new Transaction({ 
+                    type: TransactionType.FEE,
+                    data: "Genesis block" 
+                } as Transaction)
+            ]
+        } as Block); 
     });
 
     test("should be valid", () => {
-        let blockData = {
+
+        const block = new Block({
             index: 1,
             previousHash:genesis.hash,
-            data:"data block 2"
-        } as Block;
-        const block = new Block(blockData);
+            transactions: [
+                new Transaction({ 
+                    data: "data block 2" 
+                } as Transaction)
+            ]
+        } as Block);
 
         block.mine(exampleDifficulty, exampleMiner);
         
@@ -40,7 +50,11 @@ describe("Block tests", () => {
                 difficulty: exampleDifficulty,
                 maxdDifficulty: 62,
                 feePerTx: 1,
-                data: 'testando o ProtoMiner: fromBlockInfo',
+                transactions: [
+                    new Transaction({ 
+                        data: 'testando o ProtoMiner: fromBlockInfo' 
+                    } as Transaction)  
+                ],
             } as BlockInfo
         );
 
@@ -64,12 +78,17 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (index)", () => {
-        let blockData = {
+
+        const block = new Block({
             index: -1,
             previousHash:genesis.hash,
-            data:"data block 2"
-        } as Block;
-        const block = new Block(blockData);
+            transactions: [
+                new Transaction({ 
+                    data: "data block 2" 
+                } as Transaction)
+            ]
+        } as Block);
+
         const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
 
         expect(valid.success).toBe(false);
@@ -78,12 +97,17 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (previous hash)", () => {
-        let blockData = {
+
+        const block = new Block({
             index: 1,
-            previousHash:genesis.hash + '1',
-            data:"data block 2"
-        } as Block;
-        const block = new Block(blockData);
+            previousHash:genesis.hash + 1,
+            transactions: [
+                new Transaction({ 
+                    data: "data block 2" 
+                } as Transaction)
+            ]
+        } as Block);
+
         const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
 
         expect(valid.success).toBe(false);
@@ -91,12 +115,17 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (data)", () => {
-        let blockData = {
+        
+        const block = new Block({
             index: 1,
             previousHash:genesis.hash,
-            data:""
-        } as Block;
-        const block = new Block(blockData);
+            transactions: [
+                new Transaction({ 
+                    data: "" 
+                } as Transaction)
+            ]
+        } as Block);
+
         const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
         
         expect(valid.success).toBe(false);
@@ -104,12 +133,16 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (timestamp)", () => {
-        let blockData = {
+
+        const block = new Block({
             index: 1,
             previousHash:genesis.hash,
-            data:"data block 2"
-        } as Block;
-        const block = new Block(blockData);
+            transactions: [
+                new Transaction({ 
+                    data: "data block 2" 
+                } as Transaction)
+            ]
+        } as Block);
         
         block.timestamp = -2;
 
@@ -120,12 +153,16 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (empty hash)", () => {
-        let blockData = {
+        
+        const block = new Block({
             index: 1,
             previousHash:genesis.hash,
-            data:"data block 2"
-        } as Block;
-        const block = new Block(blockData);
+            transactions: [
+                new Transaction({ 
+                    data: "data block 2" 
+                } as Transaction)
+            ]
+        } as Block);
         
         block.mine(exampleDifficulty, exampleMiner);
 
@@ -138,12 +175,15 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (no mined)", () => {
-        let blockData = {
+        const block = new Block({
             index: 1,
             previousHash:genesis.hash,
-            data:"data block 2"
-        } as Block;
-        const block = new Block(blockData);
+            transactions: [
+                new Transaction({ 
+                    data: "data block 2" 
+                } as Transaction)
+            ]
+        } as Block);
 
         const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
 

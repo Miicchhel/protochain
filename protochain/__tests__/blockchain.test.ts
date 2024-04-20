@@ -1,6 +1,7 @@
 import { describe, test, expect, jest } from "@jest/globals"
 import Blockchain from "../src/lib/blockchain";
 import Block from "../src/lib/block";
+import Transaction from "../src/lib/transaction";
 
 jest.mock("../src/lib/block")
 
@@ -26,14 +27,22 @@ describe("Blockchain tests", () => {
         let blockData = {
             index: 1,
             previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash,
-            data:"data block 2"
+            transactions: [
+                new Transaction({ 
+                    data: "data block 2" 
+                } as Transaction)
+            ]
         } as Block;
         blockchain.addBlock(new Block(blockData));
 
         blockData = {
             index: 2,
             previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash,
-            data:"data block 3"
+            transactions: [
+                new Transaction({ 
+                    data: "data block 3" 
+                } as Transaction)
+            ]
         } as Block;
         const valid = blockchain.addBlock(new Block(blockData));
 
@@ -48,7 +57,11 @@ describe("Blockchain tests", () => {
         let blockData = {
             index: -1,
             previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash,
-            data:"data block 2"
+            transactions: [
+                new Transaction({ 
+                    data: "data block 2" 
+                } as Transaction)
+            ]
         } as Block;
         let valid = blockchain.addBlock(new Block(blockData));
 
@@ -64,7 +77,11 @@ describe("Blockchain tests", () => {
         let blockData = {
             index: 1,
             previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash + '1',
-            data:"data block 2"
+            transactions: [
+                new Transaction({ 
+                    data: "data block 2" 
+                } as Transaction)
+            ]
         } as Block;
         let valid = blockchain.addBlock(new Block(blockData));
 
@@ -81,7 +98,11 @@ describe("Blockchain tests", () => {
             let blockData = {
                 index: i,
                 previousHash:blockchain.blocks[i- 1].hash,
-                data: `data block ${i}`
+                transactions: [
+                    new Transaction({ 
+                        data: `data block ${i}`
+                    } as Transaction)
+                ]
             } as Block;
             blockchain.addBlock(new Block(blockData));
         }
@@ -100,7 +121,11 @@ describe("Blockchain tests", () => {
             let blockData = {
                 index: i,
                 previousHash:blockchain.blocks[i- 1].hash,
-                data: `data block ${i}`
+                transactions: [
+                    new Transaction({ 
+                        data: `data block ${i}`
+                    } as Transaction)
+                ]
             } as Block;
             blockchain.addBlock(new Block(blockData));
         }

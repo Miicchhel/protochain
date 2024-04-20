@@ -1,8 +1,10 @@
-import { describe, test, expect, beforeAll} from '@jest/globals'
+import { describe, test, expect, beforeAll, jest} from '@jest/globals'
 import Block from '../src/lib/block';
 import BlockInfo from '../src/lib/blockInfo';
 import Transaction from '../src/lib/transaction';
 import TransactionType from '../src/lib/transactionType';
+
+jest.mock("../src/lib/transaction");
 
 describe("Block tests", () => {
 
@@ -29,6 +31,9 @@ describe("Block tests", () => {
             transactions: [
                 new Transaction({ 
                     data: "data block 2" 
+                } as Transaction),
+                new Transaction({ 
+                    data: "data block 3" 
                 } as Transaction)
             ]
         } as Block);
@@ -190,4 +195,75 @@ describe("Block tests", () => {
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
     });
+    
+    test("should NOT be valid (2 FEE)", () => {
+
+        const block = new Block({
+            index: 1,
+            previousHash:genesis.hash,
+            transactions: [
+                new Transaction({ 
+                    type: TransactionType.FEE,
+                    data: "fee 1" 
+                } as Transaction),
+                new Transaction({
+                    type: TransactionType.FEE,
+                    data: "fee 2" 
+                } as Transaction),
+            ]
+        } as Block);
+
+        block.mine(exampleDifficulty, exampleMiner);
+        
+        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
+        
+        expect(valid.success).toBe(false);
+        expect(valid.success).toBeFalsy();
+        expect(valid.message).toBe("There can only be one fee transaction per block.");
+    });
+
+    test("should NOT be valid (invalid transaction hash)", () => {
+
+        const block = new Block({
+            index: 1,
+            previousHash:genesis.hash,
+            transactions: [
+                new Transaction({ 
+                    hash: 'qqrHash'
+                } as Transaction)
+            ]
+        } as Block);
+
+        block.mine(exampleDifficulty, exampleMiner);
+        
+        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
+        
+        expect(valid.success).toBe(false);
+        expect(valid.success).toBeFalsy();
+        expect(valid.message).toBe("The block contains invalid transactions: The mock transaction hash is invalid.");
+    });
+
+    
+
+    test("should NOT be valid (empty data)", () => {
+
+        const block = new Block({
+            index: 1,
+            previousHash:genesis.hash,
+            transactions: [
+                new Transaction({ 
+                    data: "" 
+                } as Transaction),
+            ]
+        } as Block);
+
+        block.mine(exampleDifficulty, exampleMiner);
+        
+        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
+        
+        expect(valid.success).toBe(false);
+        expect(valid.success).toBeFalsy();
+        expect(valid.message).toBe("The block contains invalid transactions: The mock transaction data is invalid.");
+    });
+
 });

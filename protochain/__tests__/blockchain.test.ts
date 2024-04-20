@@ -3,7 +3,9 @@ import Blockchain from "../src/lib/blockchain";
 import Block from "../src/lib/block";
 import Transaction from "../src/lib/transaction";
 
-jest.mock("../src/lib/block")
+jest.mock("../src/lib/block");
+jest.mock("../src/lib/transaction");
+
 
 describe("Blockchain tests", () => {
     

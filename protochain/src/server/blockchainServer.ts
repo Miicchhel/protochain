@@ -61,13 +61,17 @@ app.get('/blocks/:indexOrHash', (req: Request, res: Response, _next: NextFunctio
 });
 
 /** 
- * Get /transactions - Should get mempool
+ * Get /transactions/:hash? - Should get transaction specified from the hash or the next transactions contained in the mempool
   */
-app.get('/transactions', (req: Request, res: Response, _next: NextFunction) => {
-    res.json({
-        next: blockchain.mempool.slice(0, Blockchain.PX_PER_BLOCK),
-        total: blockchain.mempool.length
-    });
+app.get('/transactions/:hash?', (req: Request, res: Response, _next: NextFunction) => {
+    if (req.params.hash) {
+        res.json(blockchain.getTransaction(req.params.hash));
+    } else {
+        res.json({
+            next: blockchain.mempool.slice(0, Blockchain.PX_PER_BLOCK),
+            total: blockchain.mempool.length
+        });
+    }
 });
 
 /**

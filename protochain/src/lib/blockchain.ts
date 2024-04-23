@@ -1,6 +1,7 @@
 import Block from "./block";
 import BlockInfo from "./blockInfo";
 import Transaction from "./transaction";
+import TransactionSearch from "./transactionSearch";
 import TransactionType from "./transactionType";
 import Validation from "./validation";
 
@@ -110,6 +111,34 @@ export default class Blockchain {
      */
     getBlock(hash: string): Block | undefined {
         return this.blocks.find(block => block.hash === hash);
+    }
+
+    /**
+     * Finds a transaction by its hash
+     * @param hash the hash of the transaction you want to find
+     * @returns transaction if found, an object with mempoolIndex and blockIndex set to -1 otherwise
+     */
+    getTransaction(hash: string): TransactionSearch {
+        const mempoolIndex = this.mempool.findIndex(tx => tx.hash === hash);
+
+        if (mempoolIndex !==-1) 
+            return {
+                mempoolIndex,
+                transaction: this.mempool[mempoolIndex] 
+            } as TransactionSearch;
+
+        const blockIndex = this.blocks.findIndex(block => block.transactions.some(tx => tx.hash === hash));
+
+        if (blockIndex !== -1)
+            return {
+                blockIndex,
+                transaction: this.blocks[blockIndex].transactions.find(tx => tx.hash === hash)
+            } as TransactionSearch;
+
+        return {
+            mempoolIndex: -1,
+            blockIndex: -1,
+        } as TransactionSearch;
     }
 
     /**

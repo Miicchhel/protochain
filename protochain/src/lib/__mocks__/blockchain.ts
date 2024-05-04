@@ -1,4 +1,4 @@
-import Block from "./block";
+import Block from "../block";
 import Validation from "../validation";
 import BlockInfo from "../blockInfo";
 import Transaction from "./transaction";
@@ -9,12 +9,14 @@ import TransactionType from "../transactionType";
  */
 export default class Blockchain {
     blocks: Block[];
+    mempool: Transaction[];
     nextIndex: number = 0;
 
     /**
      * Mocked Blockchain constructor
      */
     constructor() {
+        this.mempool = [];
         this.blocks = [
             new Block({
                 index: 0,
@@ -23,7 +25,8 @@ export default class Blockchain {
                 transactions: [ 
                     new Transaction({
                         type: TransactionType.FEE,
-                        data: 'tx1'
+                        data: `['Genesis block', ${new Date().toString()}]`,
+                        hash: "Genesis_transaction_mock_hash",
                     } as Transaction)
                 ],
                 timestamp: Date.now()

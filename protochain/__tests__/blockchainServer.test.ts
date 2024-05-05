@@ -2,9 +2,11 @@ import { describe, test, expect, jest } from '@jest/globals';
 import request from 'supertest';
 import { app } from '../src/server/blockchainServer';
 import Block from '../src/lib/block';
+import Transaction from '../src/lib/transaction';
 
 jest.mock('../src/lib/block');
 jest.mock('../src/lib/blockchain');
+jest.mock('../src/lib/transaction');
 
 describe("BlockchainServer tests", () => {
     test('GET /status - Should return status', async () => {
@@ -63,5 +65,56 @@ describe("BlockchainServer tests", () => {
 
         expect(response.statusCode).toBe(400);
         expect(response.body.message).toEqual("Invalid mock block. The mock block index is invalid");
+    });
+
+    test('Get /transactions/:hash - Should get transaction', async () => {
+        const response = await request(app).get('/transactions/Genesis_transaction_mock_hash');
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body.mempoolIndex).toEqual(0);
+    });
+
+    test('Get /transactions/:hash - Should get transaction', async () => {
+        const response = await request(app).get('/transactions');
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toEqual({ next: [], total: 0 });
+    });
+
+    test('Post /transactions - Should add tx', async () => {
+        const tx = new Transaction({
+            data: 'tx1'
+        } as Transaction);
+        const response = await request(app).post('/transactions').send(tx);
+        
+        expect(response.statusCode).toBe(201);
+        expect(response.body.hash).toEqual(tx.hash);
+    });
+
+    test('Post /transactions - Should NOT add tx (hash missing)', async () => {
+        const tx = {
+            type: 1,
+            timestamp: Date.now(),
+            data: 'tx1',
+            hash: undefined
+        } as unknown as Transaction
+
+        const response = await request(app).post('/transactions').send(tx);
+
+        expect(response.statusCode).toBe(422);
+        expect(response.text).toEqual("Unprocessable Entity: Invalid or incomplete data. Missing hash!");
+    });
+
+    test('Post /transactions - Should NOT add tx (tx invalid)', async () => {
+        const tx = {
+            type: 1,
+            timestamp: Date.now(),
+            data: undefined,
+            hash: 'abc'
+        } as unknown as Transaction
+
+        const response = await request(app).post('/transactions').send(tx);
+
+        expect(response.statusCode).toBe(400);
     });
 });

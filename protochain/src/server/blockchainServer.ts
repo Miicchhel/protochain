@@ -29,6 +29,7 @@ const blockchain = new Blockchain();
  */
 app.get('/status', (_req: Request, res: Response, _next: NextFunction) => {
     res.json({
+        mempool: blockchain.mempool.length,
         numberOfBlocks: blockchain.blocks.length,
         isValid: blockchain.isValid(),
         lastBlock: blockchain.getLastBlock()

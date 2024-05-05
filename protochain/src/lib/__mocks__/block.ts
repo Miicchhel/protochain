@@ -39,7 +39,7 @@ export default class Block {
     isValid(previousHash: string, previousIndex: number): Validation {
 
         if(this.previousHash !== previousHash || previousIndex < 0 || this.index < 0) {
-            return new Validation(false, "The block index is invalid");
+            return new Validation(false, "The mock block (index | previousHash) is invalid");
         }
         return new Validation();
     }

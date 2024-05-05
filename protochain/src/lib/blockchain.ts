@@ -65,10 +65,10 @@ export default class Blockchain {
             return new Validation(false, "Invalid transaction: " + validation.message);
 
         if (this.blocks.some(block => block.transactions.some(tx => tx.hash === transaction.hash)))
-            return new Validation(false, "Duplicated transaction in blockchain: " + validation.message);
+            return new Validation(false, "Duplicated transaction in blockchain");
 
         if (this.mempool.some(tx => tx.hash === transaction.hash))
-            return new Validation(false, "Duplicated transaction in mempool: " + validation.message);
+            return new Validation(false, "Duplicated transaction in mempool");
 
         this.mempool.push(transaction);
         

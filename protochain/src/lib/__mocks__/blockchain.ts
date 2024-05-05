@@ -3,6 +3,7 @@ import Validation from "../validation";
 import BlockInfo from "../blockInfo";
 import Transaction from "./transaction";
 import TransactionType from "../transactionType";
+import TransactionSearch from "../transactionSearch";
 
 /**
  * Mocked Blockchain class
@@ -48,6 +49,22 @@ export default class Blockchain {
      * @param newBlock the new block
      * @returns message of the Validation() 
      */
+    addTransaction(transaction: Transaction): Validation {
+        const validation = transaction.isValid();
+
+        if (!validation.success) 
+            return new Validation(false, "Invalid mock transaction: " + validation.message);
+
+        this.mempool.push(transaction);
+        
+        return new Validation(true, transaction.hash);
+    }
+
+    /**
+     * 
+     * @param newBlock the new block
+     * @returns message of the Validation() 
+     */
     addBlock(newBlock: Block): Validation {
         if(newBlock.index < 0) return new Validation(false, `Invalid mock block. The mock block index is invalid`);
         
@@ -64,6 +81,13 @@ export default class Blockchain {
      */
     getBlock(hash: string): Block | undefined {
         return this.blocks.find(block => block.hash === hash);
+    }
+
+    getTransaction(hash: string): TransactionSearch {
+        return {
+            mempoolIndex: 0,
+            transaction: { hash }
+        } as TransactionSearch
     }
 
     /**

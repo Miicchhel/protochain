@@ -1,3 +1,4 @@
+import Transaction from "./transaction";
 import Validation from "../validation";
 
 /**
@@ -7,7 +8,7 @@ export default class Block {
     index: number;
     timestamp: number;
     previousHash: string;
-    data: string;
+    transactions: Transaction[];
     hash: string;
 
     /**
@@ -18,7 +19,7 @@ export default class Block {
             this.index = block?.index || 0;
             this.timestamp = block?.timestamp || Date.now();
             this.previousHash = block?.previousHash || "";
-            this.data = block?.data || "";
+            this.transactions = block?.transactions || [] as Transaction[];
             this.hash = block?.hash || this.getHash();
     }
 
@@ -38,7 +39,7 @@ export default class Block {
     isValid(previousHash: string, previousIndex: number): Validation {
 
         if(this.previousHash !== previousHash || previousIndex < 0 || this.index < 0) {
-            return new Validation(false, "The block index is invalid");
+            return new Validation(false, "The mock block (index | previousHash) is invalid");
         }
         return new Validation();
     }

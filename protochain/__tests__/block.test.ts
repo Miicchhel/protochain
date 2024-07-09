@@ -1,6 +1,10 @@
-import { describe, test, expect, beforeAll} from '@jest/globals'
+import { describe, test, expect, beforeAll, jest} from '@jest/globals'
 import Block from '../src/lib/block';
 import BlockInfo from '../src/lib/blockInfo';
+import Transaction from '../src/lib/transaction';
+import TransactionType from '../src/lib/transactionType';
+
+jest.mock("../src/lib/transaction");
 
 describe("Block tests", () => {
 
@@ -9,19 +13,30 @@ describe("Block tests", () => {
     let genesis: Block;
 
     beforeAll(() => {
-        let blockData = {
-            data:"Genesis block"
-        } as Block;
-        genesis = new Block(blockData); 
+        genesis = new Block({
+            transactions: [
+                new Transaction({ 
+                    type: TransactionType.FEE,
+                    data: "Genesis block" 
+                } as Transaction)
+            ]
+        } as Block); 
     });
 
     test("should be valid", () => {
-        let blockData = {
+
+        const block = new Block({
             index: 1,
             previousHash:genesis.hash,
-            data:"data block 2"
-        } as Block;
-        const block = new Block(blockData);
+            transactions: [
+                new Transaction({ 
+                    data: "data block 2" 
+                } as Transaction),
+                new Transaction({ 
+                    data: "data block 3" 
+                } as Transaction)
+            ]
+        } as Block);
 
         block.mine(exampleDifficulty, exampleMiner);
         
@@ -40,7 +55,11 @@ describe("Block tests", () => {
                 difficulty: exampleDifficulty,
                 maxdDifficulty: 62,
                 feePerTx: 1,
-                data: 'testando o ProtoMiner: fromBlockInfo',
+                transactions: [
+                    new Transaction({ 
+                        data: 'testando o ProtoMiner: fromBlockInfo' 
+                    } as Transaction)  
+                ],
             } as BlockInfo
         );
 
@@ -64,12 +83,17 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (index)", () => {
-        let blockData = {
+
+        const block = new Block({
             index: -1,
             previousHash:genesis.hash,
-            data:"data block 2"
-        } as Block;
-        const block = new Block(blockData);
+            transactions: [
+                new Transaction({ 
+                    data: "data block 2" 
+                } as Transaction)
+            ]
+        } as Block);
+
         const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
 
         expect(valid.success).toBe(false);
@@ -78,12 +102,17 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (previous hash)", () => {
-        let blockData = {
+
+        const block = new Block({
             index: 1,
-            previousHash:genesis.hash + '1',
-            data:"data block 2"
-        } as Block;
-        const block = new Block(blockData);
+            previousHash:genesis.hash + 1,
+            transactions: [
+                new Transaction({ 
+                    data: "data block 2" 
+                } as Transaction)
+            ]
+        } as Block);
+
         const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
 
         expect(valid.success).toBe(false);
@@ -91,12 +120,17 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (data)", () => {
-        let blockData = {
+        
+        const block = new Block({
             index: 1,
             previousHash:genesis.hash,
-            data:""
-        } as Block;
-        const block = new Block(blockData);
+            transactions: [
+                new Transaction({ 
+                    data: "" 
+                } as Transaction)
+            ]
+        } as Block);
+
         const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
         
         expect(valid.success).toBe(false);
@@ -104,12 +138,16 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (timestamp)", () => {
-        let blockData = {
+
+        const block = new Block({
             index: 1,
             previousHash:genesis.hash,
-            data:"data block 2"
-        } as Block;
-        const block = new Block(blockData);
+            transactions: [
+                new Transaction({ 
+                    data: "data block 2" 
+                } as Transaction)
+            ]
+        } as Block);
         
         block.timestamp = -2;
 
@@ -120,12 +158,16 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (empty hash)", () => {
-        let blockData = {
+        
+        const block = new Block({
             index: 1,
             previousHash:genesis.hash,
-            data:"data block 2"
-        } as Block;
-        const block = new Block(blockData);
+            transactions: [
+                new Transaction({ 
+                    data: "data block 2" 
+                } as Transaction)
+            ]
+        } as Block);
         
         block.mine(exampleDifficulty, exampleMiner);
 
@@ -138,16 +180,90 @@ describe("Block tests", () => {
     });
 
     test("should not be valid (no mined)", () => {
-        let blockData = {
+        const block = new Block({
             index: 1,
             previousHash:genesis.hash,
-            data:"data block 2"
-        } as Block;
-        const block = new Block(blockData);
+            transactions: [
+                new Transaction({ 
+                    data: "data block 2" 
+                } as Transaction)
+            ]
+        } as Block);
 
         const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
 
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
     });
+    
+    test("should NOT be valid (2 FEE)", () => {
+
+        const block = new Block({
+            index: 1,
+            previousHash:genesis.hash,
+            transactions: [
+                new Transaction({ 
+                    type: TransactionType.FEE,
+                    data: "fee 1" 
+                } as Transaction),
+                new Transaction({
+                    type: TransactionType.FEE,
+                    data: "fee 2" 
+                } as Transaction),
+            ]
+        } as Block);
+
+        block.mine(exampleDifficulty, exampleMiner);
+        
+        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
+        
+        expect(valid.success).toBe(false);
+        expect(valid.success).toBeFalsy();
+        expect(valid.message).toBe("There can only be one fee transaction per block.");
+    });
+
+    test("should NOT be valid (invalid transaction hash)", () => {
+
+        const block = new Block({
+            index: 1,
+            previousHash:genesis.hash,
+            transactions: [
+                new Transaction({ 
+                    hash: 'qqrHash'
+                } as Transaction)
+            ]
+        } as Block);
+
+        block.mine(exampleDifficulty, exampleMiner);
+        
+        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
+        
+        expect(valid.success).toBe(false);
+        expect(valid.success).toBeFalsy();
+        expect(valid.message).toBe("The block contains invalid transactions: The mock transaction hash is invalid.");
+    });
+
+    
+
+    test("should NOT be valid (empty data)", () => {
+
+        const block = new Block({
+            index: 1,
+            previousHash:genesis.hash,
+            transactions: [
+                new Transaction({ 
+                    data: "" 
+                } as Transaction),
+            ]
+        } as Block);
+
+        block.mine(exampleDifficulty, exampleMiner);
+        
+        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
+        
+        expect(valid.success).toBe(false);
+        expect(valid.success).toBeFalsy();
+        expect(valid.message).toBe("The block contains invalid transactions: The mock transaction data is invalid.");
+    });
+
 });

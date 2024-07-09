@@ -5,9 +5,10 @@ import express, { Request, Response, NextFunction } from "express";
 import morgan from "morgan";
 import Blockchain from "../lib/blockchain";
 import Block from "../lib/block";
+import Transaction from '../lib/transaction';
 
 /* c8 ignore next */
-const PORT: number = parseInt(`${process.env.MINER_WALLET || 3000}`);
+const PORT: number = parseInt(`${process.env.BLOCKCHAIN_PORT || 3000}`);
 
 const app = express();
 
@@ -28,6 +29,7 @@ const blockchain = new Blockchain();
  */
 app.get('/status', (_req: Request, res: Response, _next: NextFunction) => {
     res.json({
+        mempool: blockchain.mempool.length,
         numberOfBlocks: blockchain.blocks.length,
         isValid: blockchain.isValid(),
         lastBlock: blockchain.getLastBlock()
@@ -59,6 +61,20 @@ app.get('/blocks/:indexOrHash', (req: Request, res: Response, _next: NextFunctio
     }
 });
 
+/** 
+ * Get /transactions/:hash? - Should get transaction specified from the hash or the next transactions contained in the mempool
+  */
+app.get('/transactions/:hash?', (req: Request, res: Response, _next: NextFunction) => {
+    if (req.params.hash) {
+        res.json(blockchain.getTransaction(req.params.hash));
+    } else {
+        res.json({
+            next: blockchain.mempool.slice(0, Blockchain.PX_PER_BLOCK),
+            total: blockchain.mempool.length
+        });
+    }
+});
+
 /**
  * Post /blocks - Should add block
  */
@@ -69,6 +85,18 @@ app.post('/blocks', (req: Request, res: Response, _next: NextFunction) => {
     const validation = blockchain.addBlock(block);
 
     (validation.success) ? res.status(201).json(block) : res.status(400).json(validation);
+});
+
+/**
+ * Post /transactions - Should add transaction
+ */
+app.post('/transactions', (req: Request, res: Response, _next: NextFunction) => {
+    if (req.body.hash === undefined) return res.status(422).send('Unprocessable Entity: Invalid or incomplete data. Missing hash!');
+
+    const tx = new Transaction(req.body as Transaction);
+    const validation = blockchain.addTransaction(tx);
+
+    (validation.success) ? res.status(201).json(tx) : res.status(400).json(validation);
 });
 
 export { app };

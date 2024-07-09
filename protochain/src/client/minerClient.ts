@@ -20,6 +20,12 @@ async function mine() {
     console.log("Fetching information for the next block...");
     
     const { data } = await axios.get(`${BLOCKCHAIN_SERVER}/blocks/next`);
+    if (!data) {
+        console.log("\nNo txs found. Waiting 5 seconds...\n");
+        return setTimeout(() => {
+            mine();
+        }, 5000);
+    }
     
     const blockinfo = data as BlockInfo;
     
@@ -42,9 +48,9 @@ async function mine() {
         console.log(error.response ? error.response.data : error.message);
     }
     
-//     setTimeout(() => {
-//         mine();
-//     }, 1000);
+    setTimeout(() => {
+        mine();
+    }, 1000);
 }
 
 mine();

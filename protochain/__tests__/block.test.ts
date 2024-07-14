@@ -3,8 +3,10 @@ import Block from '../src/lib/block';
 import BlockInfo from '../src/lib/blockInfo';
 import Transaction from '../src/lib/transaction';
 import TransactionType from '../src/lib/transactionType';
+import TransactionInput from '../src/lib/transactionInput';
 
 jest.mock("../src/lib/transaction");
+jest.mock("../src/lib/transactionInput");
 
 describe("Block tests", () => {
 
@@ -17,7 +19,7 @@ describe("Block tests", () => {
             transactions: [
                 new Transaction({ 
                     type: TransactionType.FEE,
-                    data: "Genesis block" 
+                    txInput: new TransactionInput() 
                 } as Transaction)
             ]
         } as Block); 
@@ -29,11 +31,13 @@ describe("Block tests", () => {
             index: 1,
             previousHash:genesis.hash,
             transactions: [
-                new Transaction({ 
-                    data: "data block 2" 
+                new Transaction({
+                    to: 'Michel',
+                    txInput: new TransactionInput() 
                 } as Transaction),
-                new Transaction({ 
-                    data: "data block 3" 
+                new Transaction({
+                    to: 'Michel',
+                    txInput: new TransactionInput() 
                 } as Transaction)
             ]
         } as Block);
@@ -56,8 +60,9 @@ describe("Block tests", () => {
                 maxdDifficulty: 62,
                 feePerTx: 1,
                 transactions: [
-                    new Transaction({ 
-                        data: 'testando o ProtoMiner: fromBlockInfo' 
+                    new Transaction({
+                        to: 'Michel',
+                        txInput: new TransactionInput()  
                     } as Transaction)  
                 ],
             } as BlockInfo
@@ -73,9 +78,9 @@ describe("Block tests", () => {
     });
 
     test("should NOT be valid (fallbacks)", () => {
-        const block = new Block(); // Empty block. When we use the default values we are unable to fill the previousHash with the hash value of the previous block.
+        const block = new Block(); // Empty block. When we use the default values we are unable to fill some of the attributes
         
-        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
+        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);      
 
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
@@ -88,8 +93,9 @@ describe("Block tests", () => {
             index: -1,
             previousHash:genesis.hash,
             transactions: [
-                new Transaction({ 
-                    data: "data block 2" 
+                new Transaction({
+                    to: 'Michel',
+                    txInput: new TransactionInput()  
                 } as Transaction)
             ]
         } as Block);
@@ -98,6 +104,7 @@ describe("Block tests", () => {
 
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
+        expect(valid.message).toBe('The block index is invalid.');
         
     });
 
@@ -107,8 +114,9 @@ describe("Block tests", () => {
             index: 1,
             previousHash:genesis.hash + 1,
             transactions: [
-                new Transaction({ 
-                    data: "data block 2" 
+                new Transaction({
+                    to: 'Michel',
+                    txInput: new TransactionInput()  
                 } as Transaction)
             ]
         } as Block);
@@ -117,24 +125,29 @@ describe("Block tests", () => {
 
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
+        expect(valid.message).toBe('The block previous hash is invalid.');
     });
 
-    test("should not be valid (data)", () => {
-        
+    test("should not be valid [transactions (to)]", () => {
+        const txInput = new TransactionInput() 
+
         const block = new Block({
             index: 1,
             previousHash:genesis.hash,
             transactions: [
-                new Transaction({ 
-                    data: "" 
+                new Transaction({
+                    txInput 
                 } as Transaction)
             ]
         } as Block);
 
+        block.mine(exampleDifficulty, exampleMiner);
+
         const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
-        
+
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
+        expect(valid.message).toBe("The block contains invalid transactions: The mock transaction 'to' is invalid.");
     });
 
     test("should not be valid (timestamp)", () => {
@@ -143,8 +156,9 @@ describe("Block tests", () => {
             index: 1,
             previousHash:genesis.hash,
             transactions: [
-                new Transaction({ 
-                    data: "data block 2" 
+                new Transaction({
+                    to: 'Michel',
+                    txInput: new TransactionInput() 
                 } as Transaction)
             ]
         } as Block);
@@ -155,6 +169,8 @@ describe("Block tests", () => {
 
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
+        expect(valid.message).toBe('The block timestamp is invalid.');
+
     });
 
     test("should not be valid (empty hash)", () => {
@@ -163,8 +179,9 @@ describe("Block tests", () => {
             index: 1,
             previousHash:genesis.hash,
             transactions: [
-                new Transaction({ 
-                    data: "data block 2" 
+                new Transaction({
+                    to: 'Michel',
+                    txInput: new TransactionInput() 
                 } as Transaction)
             ]
         } as Block);
@@ -173,10 +190,11 @@ describe("Block tests", () => {
 
         block.hash = "";
         
-        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);        
+        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
 
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
+        expect(valid.message).toBe('The block hash is invalid!!!!');
     });
 
     test("should not be valid (no mined)", () => {
@@ -184,8 +202,9 @@ describe("Block tests", () => {
             index: 1,
             previousHash:genesis.hash,
             transactions: [
-                new Transaction({ 
-                    data: "data block 2" 
+                new Transaction({
+                    to: 'Michel',
+                    txInput: new TransactionInput()  
                 } as Transaction)
             ]
         } as Block);
@@ -194,6 +213,7 @@ describe("Block tests", () => {
 
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
+        expect(valid.message).toBe('The block was not mined.');
     });
     
     test("should NOT be valid (2 FEE)", () => {
@@ -203,12 +223,14 @@ describe("Block tests", () => {
             previousHash:genesis.hash,
             transactions: [
                 new Transaction({ 
-                    type: TransactionType.FEE,
-                    data: "fee 1" 
+                    type: TransactionType.FEE, //'fee 1'
+                    to: 'Michel',
+                    txInput: new TransactionInput() 
                 } as Transaction),
                 new Transaction({
-                    type: TransactionType.FEE,
-                    data: "fee 2" 
+                    type: TransactionType.FEE, //'fee 2'
+                    to: 'Michel',
+                    txInput: new TransactionInput() 
                 } as Transaction),
             ]
         } as Block);
@@ -237,33 +259,9 @@ describe("Block tests", () => {
         block.mine(exampleDifficulty, exampleMiner);
         
         const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
-        
+
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
-        expect(valid.message).toBe("The block contains invalid transactions: The mock transaction hash is invalid.");
+        expect(valid.message).toBe("The block contains invalid transactions: The mock transaction 'hash' is invalid.");
     });
-
-    
-
-    test("should NOT be valid (empty data)", () => {
-
-        const block = new Block({
-            index: 1,
-            previousHash:genesis.hash,
-            transactions: [
-                new Transaction({ 
-                    data: "" 
-                } as Transaction),
-            ]
-        } as Block);
-
-        block.mine(exampleDifficulty, exampleMiner);
-        
-        const valid = block.isValid(genesis.hash, genesis.index, exampleDifficulty);
-        
-        expect(valid.success).toBe(false);
-        expect(valid.success).toBeFalsy();
-        expect(valid.message).toBe("The block contains invalid transactions: The mock transaction data is invalid.");
-    });
-
 });

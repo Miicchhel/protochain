@@ -28,9 +28,9 @@ export default class Blockchain {
                 transactions: [
                     new Transaction({
                         type: TransactionType.FEE,
-                        data: `['Genesis block', ${new Date().toString()}]`,
+                        to: `['Genesis block', ${new Date().toString()}]`,
                     }  as Transaction) 
-                ]as Transaction[]
+                ] as Transaction[]
             } as Block)
         ];
         this.nextIndex++;

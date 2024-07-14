@@ -92,11 +92,11 @@ app.post('/blocks', (req: Request, res: Response, _next: NextFunction) => {
  */
 app.post('/transactions', (req: Request, res: Response, _next: NextFunction) => {
     if (req.body.hash === undefined) return res.status(422).send('Unprocessable Entity: Invalid or incomplete data. Missing hash!');
-
+    
     const tx = new Transaction(req.body as Transaction);
     const validation = blockchain.addTransaction(tx);
 
-    (validation.success) ? res.status(201).json(tx) : res.status(400).json(validation);
+    (validation.success) ? res.status(201).json(tx) : res.status(400).json({ error: validation.message });
 });
 
 export { app };

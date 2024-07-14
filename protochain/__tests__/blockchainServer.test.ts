@@ -3,10 +3,12 @@ import request from 'supertest';
 import { app } from '../src/server/blockchainServer';
 import Block from '../src/lib/block';
 import Transaction from '../src/lib/transaction';
+import TransactionInput from '../src/lib/transactionInput';
 
 jest.mock('../src/lib/block');
 jest.mock('../src/lib/blockchain');
 jest.mock('../src/lib/transaction');
+jest.mock('../src/lib/transactionInput');
 
 describe("BlockchainServer tests", () => {
     test('GET /status - Should return status', async () => {
@@ -83,7 +85,8 @@ describe("BlockchainServer tests", () => {
 
     test('Post /transactions - Should add tx', async () => {
         const tx = new Transaction({
-            data: 'tx1'
+            to: 'Michel',
+            txInput: new TransactionInput()
         } as Transaction);
         const response = await request(app).post('/transactions').send(tx);
         
@@ -95,7 +98,7 @@ describe("BlockchainServer tests", () => {
         const tx = {
             type: 1,
             timestamp: Date.now(),
-            data: 'tx1',
+            to: 'Michel',
             hash: undefined
         } as unknown as Transaction
 
@@ -106,15 +109,19 @@ describe("BlockchainServer tests", () => {
     });
 
     test('Post /transactions - Should NOT add tx (tx invalid)', async () => {
-        const tx = {
+        const tx = new Transaction({
             type: 1,
             timestamp: Date.now(),
-            data: undefined,
-            hash: 'abc'
-        } as unknown as Transaction
+            to: 'Michel',
+            txInput: new TransactionInput(),
+            hash: ''
+        } as Transaction);
+
+
+        if(tx.txInput) tx.txInput.amount = -1;
 
         const response = await request(app).post('/transactions').send(tx);
-
         expect(response.statusCode).toBe(400);
+        expect(response.body).toEqual({ error: "Invalid mock transaction: The mock transaction 'txInput' is invalid." });
     });
 });

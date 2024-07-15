@@ -36,10 +36,6 @@ describe("TransactionInput tests", () => {
         
         const valid = txInput.isValid();
 
-        console.log(txInput.amount);
-        console.log(valid.message);
-        
-
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
         expect(valid.message).toBe("Amount must be greater than 0");

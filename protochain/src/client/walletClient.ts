@@ -33,7 +33,8 @@ function menu() {
         console.log('2. Recover Wallet');
         console.log('3. Balance');
         console.log('4. Send Transaction');
-        console.log('5. Logout and close...');
+        console.log('5. Search Transaction');
+        console.log('6. Logout and close...');
 
         rl.question('\nChoose an option: ', (option) => {
             switch (option) {
@@ -53,6 +54,9 @@ function menu() {
                     sendTransaction();
                     break;
                 case '5':
+                    searchTransaction();
+                    break;
+                case '6':
                     logout();
                     rl.close();
                     break;
@@ -189,6 +193,18 @@ function logout() {
     myWalletPriv = "";
 
     console.log("\nyou've been disconnected");
+}
+
+function searchTransaction() {
+    console.clear();
+
+    rl.question('Enter the transaction hash: ', async (txHash) => {
+        const response = await axios.get(`${BLOCKCHAIN_SERVER}/transactions/${txHash}`);
+        console.log(response.data);
+        
+        return preMenu();
+    });
+    
 }
 
 function isValidPrivateKey(privKey: string): boolean {

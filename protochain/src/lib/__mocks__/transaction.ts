@@ -24,8 +24,13 @@ export default class Transaction {
         return 'transaction_mock_hash';
     }
 
-    isValid(): Validation {        
+    isValid(): Validation {       
+        
         if (this.hash != this.getHash()) {
+
+            if (this.hash === 'mock_test_pending_tx')
+                return new Validation();
+
             return new Validation(false, "The mock transaction 'hash' is invalid.");
         }
         

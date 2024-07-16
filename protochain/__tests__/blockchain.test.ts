@@ -179,14 +179,39 @@ describe("Blockchain tests", () => {
         const blockchain = new Blockchain();
         blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
         
-        const txInput = new TransactionInput
-
         const tx = new Transaction({ 
             to: "Michel",
         } as Transaction)
         const validation = blockchain.addTransaction(tx);
 
         expect(validation.success).toBe(true);
+    });
+
+    test("Should NOT add transaction (pending tx)", () => {
+        const blockchain = new Blockchain();
+        blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
+
+        const tx = new Transaction({ 
+            to: "Michel1",
+        } as Transaction)
+        blockchain.addTransaction(tx);
+
+        const tx2 = new Transaction({ 
+            to: "Michel2",
+            hash: 'mock_test_pending_tx'
+        } as Transaction)
+        blockchain.addTransaction(tx2);
+
+
+        const tx3 = new Transaction({ 
+            to: "Michel3",
+            hash: 'mock_test_pending_tx'
+        } as Transaction)
+
+        const validation = blockchain.addTransaction(tx3);
+
+        expect(validation.success).toBe(false);
+        expect(validation.message).toEqual("This wallet has a pending transaction.");
     });
 
     test("Should NOT add transaction (invalid tx)", () => {

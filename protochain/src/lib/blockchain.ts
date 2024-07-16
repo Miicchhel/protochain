@@ -12,7 +12,7 @@ export default class Blockchain {
     blocks: Block[];
     mempool: Transaction[];
     nextIndex: number = 0;
-    static readonly DIFFICULTY_FACTOR: number = 5;
+    static readonly DIFFICULTY_FACTOR: number = 1;
     static readonly MAX_DIFFICULTY: number = 62;
     static readonly PX_PER_BLOCK: number = 2;
 
@@ -49,7 +49,7 @@ export default class Blockchain {
      * @returns the difficulty
      */
     getDifficulty(): number {
-        return Math.ceil(this.blocks.length / Blockchain.DIFFICULTY_FACTOR);
+        return Math.ceil(this.blocks.length / Blockchain.DIFFICULTY_FACTOR) + 1;
     }
 
     /**

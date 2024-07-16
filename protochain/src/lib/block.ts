@@ -78,10 +78,24 @@ export default class Block {
      */
     isValid(previousHash: string, previousIndex: number, difficulty: number): Validation {
 
+        if (this.index - 1 != previousIndex) return new Validation(false, "The block index is invalid.");
+        if (this.previousHash != previousHash) return new Validation(false, "The block previous hash is invalid.");
+        if (this.timestamp < 1) return new Validation(false, "The block timestamp is invalid.");
+        if (!this.nonce || !this.miner) return new Validation(false, "The block was not mined.");
+
         if (this.transactions && this.transactions.length) {
-            if (this.transactions.filter(tx => tx.type === TransactionType.FEE).length > 1) {
+            const feeTxs = this.transactions.filter(tx => tx.type === TransactionType.FEE);
+            
+            if (!feeTxs.length) {
+                return new Validation(false, "The block must contain at least one fee transaction.");
+            }
+
+            if (feeTxs.length > 1) {
                 return new Validation(false, "There can only be one fee transaction per block.");
             }
+
+            if (feeTxs[0].to !== this.miner)
+                return new Validation(false, "Invalid fee tx: different from miner. The fee transaction must be sent to the person who mined the block.");
 
             let validations = this.transactions.map(tx => tx.isValid());
             const erros = validations.filter(v => !v.success).map(v => v.message);
@@ -89,11 +103,6 @@ export default class Block {
                 return new Validation(false, "The block contains invalid transactions: " + erros.reduce((a,b) => a + b));
             }
         }
-
-        if (this.index - 1 != previousIndex) return new Validation(false, "The block index is invalid.");
-        if (this.previousHash != previousHash) return new Validation(false, "The block previous hash is invalid.");
-        if (this.timestamp < 1) return new Validation(false, "The block timestamp is invalid.");
-        if (!this.nonce || !this.miner) return new Validation(false, "The block was not mined.");
 
         const prefix = new Array(difficulty + 1).join("0");
         if (

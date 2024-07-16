@@ -125,7 +125,7 @@ export default class Blockchain {
         return {
             index,
             previousHash,
-            difficulty: 0,
+            difficulty: 1,
             maxdDifficulty: 62,
             feePerTx,
             transactions

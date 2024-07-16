@@ -78,7 +78,11 @@ describe("Transaction tests", () => {
 
     test("should use default TransactionInput when none provided", () => {
         const tx = new Transaction({
-            to: "Michel"
+            to: "Michel",
+            txInput: {
+                fromAddress: "Michel",
+                amount: 0
+            }
         } as Transaction);
     
         expect(tx.txInput).toBeInstanceOf(TransactionInput);

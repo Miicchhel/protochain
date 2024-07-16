@@ -5,6 +5,8 @@ import axios from 'axios';
 import readline from 'readline'
 import Wallet from '../lib/wallet';
 import * as ecc from 'tiny-secp256k1';
+import Transaction from '../lib/transaction';
+import TransactionInput from '../lib/transactionInput';
 
 const BLOCKCHAIN_SERVER = process.env.BLOCKCHAIN_SERVER;
 
@@ -75,7 +77,7 @@ function login() {
     console.clear();
     
     rl.question('Enter your private key: ', (privKey) => {
-        if (privKey.length === 64 && /^[0-9a-fA-F]+$/.test(privKey)) {
+        if (isValidPrivateKey(privKey)) {
             try {
                 const wallet = new Wallet(privKey);
                 myWalletPub = wallet.publicKey;
@@ -138,7 +140,47 @@ function sendTransaction() {
         return preMenu();
     }
     
-    // TODO: send transaction via API
+    console.log(`Your wallet is ${myWalletPub}`);
+
+    rl.question('To whom do you want to send?\n', (toWallet) => {
+        if (!isValidPublicKey(toWallet)) {
+            console.log('Invalid Wallet');
+            return preMenu();
+        }
+
+        rl.question('Amount: ', async (amountStr) => {
+            const amount = parseInt(amountStr);
+            
+            if (!amount) {
+                console.log('Invalid amount');
+                return preMenu();
+            }
+            
+            // TODO: balance validation
+
+            const tx = new Transaction({
+                to: toWallet,
+                txInput: new TransactionInput({
+                    fromAddress: myWalletPub,
+                    amount,
+                } as TransactionInput)
+            } as Transaction);
+
+            tx.txInput?.sign(myWalletPriv);
+
+            try {
+                const txResponse = await axios.post(`${BLOCKCHAIN_SERVER}/transactions`, tx);
+                console.log('Transaction accepted. Waiting the miners!');
+                console.log(txResponse.data);
+            } catch (error: any) {
+                console.error(error.response ? error.response.data : error.message);
+            }
+
+            return preMenu();
+
+        });
+    });
+    
     preMenu();
 }
 
@@ -147,6 +189,24 @@ function logout() {
     myWalletPriv = "";
 
     console.log("\nyou've been disconnected");
+}
+
+function isValidPrivateKey(privKey: string): boolean {
+    try {
+        const bufferPrivKey = Buffer.from(privKey, 'hex');
+        return ecc.isPrivate(bufferPrivKey);
+    } catch {
+        return false;
+    }
+}
+
+function isValidPublicKey(pubKey: string): boolean {
+    try {
+        const bufferPubKey = Buffer.from(pubKey, 'hex');
+        return ecc.isPoint(bufferPubKey);
+    } catch {
+        return false;
+    }
 }
 
 menu();

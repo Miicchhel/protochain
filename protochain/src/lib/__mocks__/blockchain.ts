@@ -4,6 +4,7 @@ import BlockInfo from "../blockInfo";
 import Transaction from "./transaction";
 import TransactionType from "../transactionType";
 import TransactionSearch from "../transactionSearch";
+import TransactionInput from "./transactionInput";
 
 /**
  * Mocked Blockchain class
@@ -26,7 +27,7 @@ export default class Blockchain {
                 transactions: [ 
                     new Transaction({
                         type: TransactionType.FEE,
-                        data: `['Genesis block', ${new Date().toString()}]`,
+                        to: `['Genesis block', ${new Date().toString()}]`,
                         hash: "Genesis_transaction_mock_hash",
                     } as Transaction)
                 ],
@@ -116,14 +117,15 @@ export default class Blockchain {
         const feePerTx = this.getFeePerTx();
         const transactions = [
             new Transaction({
-                data: new Date().toString()
+                to: "Michel",
+                txInput: new TransactionInput()
             } as Transaction)
         ]
 
         return {
             index,
             previousHash,
-            difficulty: 0,
+            difficulty: 1,
             maxdDifficulty: 62,
             feePerTx,
             transactions

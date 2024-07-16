@@ -12,7 +12,7 @@ export default class Blockchain {
     blocks: Block[];
     mempool: Transaction[];
     nextIndex: number = 0;
-    static readonly DIFFICULTY_FACTOR: number = 5;
+    static readonly DIFFICULTY_FACTOR: number = 1;
     static readonly MAX_DIFFICULTY: number = 62;
     static readonly PX_PER_BLOCK: number = 2;
 
@@ -28,9 +28,9 @@ export default class Blockchain {
                 transactions: [
                     new Transaction({
                         type: TransactionType.FEE,
-                        data: `['Genesis block', ${new Date().toString()}]`,
+                        to: `['Genesis block', ${new Date().toString()}]`,
                     }  as Transaction) 
-                ]as Transaction[]
+                ] as Transaction[]
             } as Block)
         ];
         this.nextIndex++;
@@ -49,7 +49,7 @@ export default class Blockchain {
      * @returns the difficulty
      */
     getDifficulty(): number {
-        return Math.ceil(this.blocks.length / Blockchain.DIFFICULTY_FACTOR);
+        return Math.ceil(this.blocks.length / Blockchain.DIFFICULTY_FACTOR) + 1;
     }
 
     /**
@@ -59,6 +59,16 @@ export default class Blockchain {
      * @return {Validation} The validation result of the transaction.
      */
     addTransaction(transaction: Transaction): Validation {
+        if (transaction.txInput) {
+            const from = transaction.txInput.fromAddress;
+            const pendingTx = this.mempool.map(tx => tx.txInput).filter(txi => txi!.fromAddress === from);
+                        
+            if (pendingTx && pendingTx.length >= Blockchain.PX_PER_BLOCK)
+                return new Validation(false, 'This wallet has a pending transaction.')
+
+            // TODO: Validar a origem dos fundos
+        }
+
         const validation = transaction.isValid();
 
         if (!validation.success) 

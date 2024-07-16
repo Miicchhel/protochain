@@ -2,9 +2,11 @@ import { describe, test, expect, jest } from "@jest/globals"
 import Blockchain from "../src/lib/blockchain";
 import Block from "../src/lib/block";
 import Transaction from "../src/lib/transaction";
+import TransactionInput from "../src/lib/transactionInput";
 
 jest.mock("../src/lib/block");
 jest.mock("../src/lib/transaction");
+jest.mock("../src/lib/transactionInput");
 
 
 describe("Blockchain tests", () => {
@@ -27,7 +29,7 @@ describe("Blockchain tests", () => {
         const blockchain = new Blockchain();
 
         let tx = new Transaction({
-            data: "data block 2"
+            to: "Michel"
         } as Transaction);
         blockchain.mempool.push(tx);
 
@@ -39,7 +41,7 @@ describe("Blockchain tests", () => {
         blockchain.addBlock(new Block(blockData));
 
         tx = new Transaction({
-            data: "data block 3"
+            to: "Michel"
         } as Transaction);
         blockchain.mempool.push(tx);
 
@@ -48,7 +50,7 @@ describe("Blockchain tests", () => {
             previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash,
             transactions: [tx]
         } as Block;
-        const valid = blockchain.addBlock(new Block(blockData));
+        const valid = blockchain.addBlock(new Block(blockData));    
         
         expect(valid.message).toBe("mockBlockHash");
         expect(valid.success).toBe(true);
@@ -63,7 +65,7 @@ describe("Blockchain tests", () => {
             previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash,
             transactions: [
                 new Transaction({ 
-                    data: "data block 2" 
+                    to: "Michel" 
                 } as Transaction)
             ]
         } as Block;
@@ -83,7 +85,7 @@ describe("Blockchain tests", () => {
             previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash + '1',
             transactions: [
                 new Transaction({ 
-                    data: "data block 2" 
+                    to: "Michel"
                 } as Transaction)
             ]
         } as Block;
@@ -98,7 +100,7 @@ describe("Blockchain tests", () => {
         const blockchain = new Blockchain();
 
         const tx = new Transaction({ 
-            data: `data block 2`,
+            to: "Michel",
             hash: 'mockHash_teste'
         } as Transaction)
 
@@ -109,7 +111,8 @@ describe("Blockchain tests", () => {
             previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash,
             transactions: [
                 new Transaction({ 
-                    data: "data block 2" 
+                    to: "Michel",
+                    txInput: new TransactionInput()
                 } as Transaction)
             ]
         } as Block;
@@ -125,8 +128,9 @@ describe("Blockchain tests", () => {
 
         for (let i = 1; i <= 5; i++) {
 
-            let tx = new Transaction({ 
-                data: `data block ${i}`
+            let tx = new Transaction({
+                to: `Michel ${i}`,
+                txInput: new TransactionInput()
             } as Transaction)    
             blockchain.mempool.push(tx);
 
@@ -135,11 +139,12 @@ describe("Blockchain tests", () => {
                 previousHash:blockchain.blocks[i- 1].hash,
                 transactions: [tx]
             } as Block;
+
             blockchain.addBlock(new Block(blockData));
         }
         
         const valid = blockchain.isValid();
-    
+
         expect(valid.message).toBe("");
         expect(valid.success).toBe(true);
     });
@@ -150,7 +155,7 @@ describe("Blockchain tests", () => {
         for (let i = 1; i <= 5; i++) {
 
             let tx = new Transaction({ 
-                data: `data block ${i}`
+                to: `Michel ${i}`
             } as Transaction)    
             blockchain.mempool.push(tx);
             
@@ -173,13 +178,40 @@ describe("Blockchain tests", () => {
     test("Should add transaction", () => {
         const blockchain = new Blockchain();
         blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
-     
+        
         const tx = new Transaction({ 
-            data: `data block 2`,
+            to: "Michel",
         } as Transaction)
         const validation = blockchain.addTransaction(tx);
 
         expect(validation.success).toBe(true);
+    });
+
+    test("Should NOT add transaction (pending tx)", () => {
+        const blockchain = new Blockchain();
+        blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
+
+        const tx = new Transaction({ 
+            to: "Michel1",
+        } as Transaction)
+        blockchain.addTransaction(tx);
+
+        const tx2 = new Transaction({ 
+            to: "Michel2",
+            hash: 'mock_test_pending_tx'
+        } as Transaction)
+        blockchain.addTransaction(tx2);
+
+
+        const tx3 = new Transaction({ 
+            to: "Michel3",
+            hash: 'mock_test_pending_tx'
+        } as Transaction)
+
+        const validation = blockchain.addTransaction(tx3);
+
+        expect(validation.success).toBe(false);
+        expect(validation.message).toEqual("This wallet has a pending transaction.");
     });
 
     test("Should NOT add transaction (invalid tx)", () => {
@@ -187,19 +219,19 @@ describe("Blockchain tests", () => {
         blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
      
         const tx = new Transaction({ 
-            data: ``,
+            to: "",
         } as Transaction)
         const validation = blockchain.addTransaction(tx);
 
         expect(validation.success).toBe(false);
-        expect(validation.message).toEqual('Invalid transaction: The mock transaction data is invalid.')
+        expect(validation.message).toEqual("Invalid transaction: The mock transaction 'to' is invalid.")
     });
 
     test("Should NOT add transaction (duplicated in blockchain)", () => {
         const blockchain = new Blockchain();
      
         const tx = new Transaction({ 
-            data: `data block 2`,
+            to: `Michel`,
         } as Transaction)
         const validation = blockchain.addTransaction(tx);
 
@@ -212,13 +244,12 @@ describe("Blockchain tests", () => {
         blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
      
         const tx = new Transaction({ 
-            data: `data block 2`,
+            to: `Michel`,
         } as Transaction)
 
         blockchain.mempool.push(tx);
 
         const validation = blockchain.addTransaction(tx);
-
         expect(validation.success).toBe(false);
         expect(validation.message).toEqual('Duplicated transaction in mempool');
     });
@@ -228,11 +259,11 @@ describe("Blockchain tests", () => {
         blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
        
         const tx = new Transaction({ 
-            data: `data block 2`,
+            to: `Michel`,
         } as Transaction)
         blockchain.addTransaction(tx);
 
-        const result = blockchain.getTransaction('transaction_mock_hash');
+        const result = blockchain.getTransaction('transaction_mock_hash');      
 
         expect(result.mempoolIndex).toEqual(0);
     });
@@ -242,7 +273,7 @@ describe("Blockchain tests", () => {
         blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
        
         const tx = new Transaction({ 
-            data: `data block 2`,
+            to: `Michel`,
         } as Transaction)
         blockchain.addTransaction(tx);
 
@@ -255,7 +286,6 @@ describe("Blockchain tests", () => {
         blockchain.addBlock(new Block(blockData));
         
         const result = blockchain.getTransaction('transaction_mock_hash');
-
         expect(result.blockIndex).toEqual(1);
     });
 
@@ -266,17 +296,6 @@ describe("Blockchain tests", () => {
         
         expect(result.mempoolIndex).toEqual(-1);
         expect(result.blockIndex).toEqual(-1);
-    });
-
-    test("Should NOT add transaction", () => {
-        const blockchain = new Blockchain();
-     
-        const tx = new Transaction({ 
-            data: `data block 2`,
-        } as Transaction)
-        const validation = blockchain.addTransaction(tx);
-
-        expect(validation.success).toBe(false);
     });
 
     test("Should get block", () => {
@@ -290,7 +309,7 @@ describe("Blockchain tests", () => {
 
         blockchain.mempool.push(new Transaction());
         
-        const info = blockchain.getNextBlock();
+        const info = blockchain.getNextBlock();        
         expect(info ? info.index : 0).toEqual(1);
     });
 

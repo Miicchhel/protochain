@@ -7,6 +7,7 @@ import Wallet from '../lib/wallet';
 import * as ecc from 'tiny-secp256k1';
 import Transaction from '../lib/transaction';
 import TransactionInput from '../lib/transactionInput';
+import TransactionOutput from '../lib/transactionOutput';
 
 const BLOCKCHAIN_SERVER = process.env.BLOCKCHAIN_SERVER;
 
@@ -140,11 +141,11 @@ function sendTransaction() {
     console.clear();
 
     if (!myWalletPub) { 
-        console.log('You are not logged yet. Please login first.');
+        console.log('\nYou are not logged yet. Please login first.\n');
         return preMenu();
     }
     
-    console.log(`Your wallet is ${myWalletPub}`);
+    console.log(`\nYour wallet is ${myWalletPub}`);
 
     rl.question('To whom do you want to send?\n', (toWallet) => {
         if (!isValidPublicKey(toWallet)) {
@@ -156,26 +157,53 @@ function sendTransaction() {
             const amount = parseInt(amountStr);
             
             if (!amount) {
-                console.log('Invalid amount');
+                console.log('\nInvalid amount\n');
                 return preMenu();
             }
             
+            const walletResponse = await axios.get(`${BLOCKCHAIN_SERVER}/wallets/${myWalletPub}`);
+            const balance = walletResponse.data.balance as number;
+            const fee = walletResponse.data.fee as number;
+            const utxo = walletResponse.data.utxo as TransactionOutput[];
+
             // TODO: balance validation
+            if(balance < amount + fee) {
+                console.log('\nInsufficient balance (tx + fee)\n');
+                return preMenu();
+            }
 
-            const tx = new Transaction({
-                to: toWallet,
-                txInput: new TransactionInput({
-                    fromAddress: myWalletPub,
-                    amount,
-                } as TransactionInput)
-            } as Transaction);
+            const tx = new Transaction();
 
-            tx.txInput?.sign(myWalletPriv);
+            tx.txOutputs = [new TransactionOutput({
+                toAddress: toWallet,
+                amount
+            } as TransactionOutput)];
+            
+            tx.txInputs = [new TransactionInput({
+                fromAddress: myWalletPub,
+                amount,
+                previousTx: utxo[0].tx
+            } as TransactionInput)];
+
+            tx.txInputs[0].sign(myWalletPriv);
+
+            // console.log('\n-----walletClient.ts-----');
+            // console.log('tx.hash (antes): ',tx.hash);
+
+            tx.hash = tx.getHash();
+            tx.txOutputs[0].tx = tx.hash;
+
+
+            // console.log('tx.hash (depois): ',tx.hash);
+            // console.log('tx.getHash(): ',tx.getHash());
+            // console.log('\ntransaction: ',tx);
+            // console.log('---------\n');
 
             try {
                 const txResponse = await axios.post(`${BLOCKCHAIN_SERVER}/transactions`, tx);
-                console.log('Transaction accepted. Waiting the miners!');
+                console.log('\nTransaction accepted. Waiting the miners!');
                 console.log(txResponse.data);
+                console.log("");
             } catch (error: any) {
                 console.error(error.response ? error.response.data : error.message);
             }

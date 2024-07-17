@@ -7,11 +7,15 @@ import Blockchain from "../lib/blockchain";
 import Block from "../lib/block";
 import Transaction from '../lib/transaction';
 import Wallet from '../lib/wallet';
+import TransactionOutput from '../lib/transactionOutput';
 
 /* c8 ignore next */
 const PORT: number = parseInt(`${process.env.BLOCKCHAIN_PORT || 3000}`);
 
 const app = express();
+
+const wallet = new Wallet(process.env.BLOCKCHAIN_WALLET);
+const blockchain = new Blockchain(wallet.publicKey);
 
 /** Run the server */
 /* c8 ignore next 6 */
@@ -19,13 +23,9 @@ if (process.argv.includes('--run')) {
     app.use(morgan('tiny'));
 
     // hostname -I: get the computer's IP address
-    app.listen(PORT, '0.0.0.0', () => { console.log(`Blockchain server is running at ${PORT}`)});
+    app.listen(PORT, '0.0.0.0', () => { console.log(`Blockchain server is running at ${PORT}.\nWallet: ${wallet.publicKey}`); });
 }
 app.use(express.json());
-
-const wallet = new Wallet(process.env.BLOCKCHAIN_WALLET);
-
-const blockchain = new Blockchain(wallet.publicKey);
 
 /**
  * GET /status - Should return status
@@ -100,6 +100,22 @@ app.post('/transactions', (req: Request, res: Response, _next: NextFunction) => 
     const validation = blockchain.addTransaction(tx);
 
     (validation.success) ? res.status(201).json(tx) : res.status(400).json({ error: validation.message });
+});
+
+app.get('/wallets/:wallet', (req: Request, res: Response, _next: NextFunction) => {
+    const wallet = req.params.wallet;
+
+    // todo: fazer versão final de UTXO
+    return res.json({
+        balance: 10,
+        fee: blockchain.getFeePerTx(),
+        utxo: [new TransactionOutput({
+            toAddress: wallet,
+            amount: 10,
+            tx: "abc"
+        } as TransactionOutput)] 
+    });
+
 });
 
 export { app };

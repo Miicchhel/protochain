@@ -81,7 +81,7 @@ export default class Block {
         if (this.index - 1 != previousIndex) return new Validation(false, "The block index is invalid.");
         if (this.previousHash != previousHash) return new Validation(false, "The block previous hash is invalid.");
         if (this.timestamp < 1) return new Validation(false, "The block timestamp is invalid.");
-        if (!this.nonce || !this.miner) return new Validation(false, "The block was not mined.");
+        if (this.nonce < 1 || !this.miner) return new Validation(false, "The block was not mined.");
 
         if (this.transactions && this.transactions.length) {
             const feeTxs = this.transactions.filter(tx => tx.type === TransactionType.FEE);
@@ -94,8 +94,10 @@ export default class Block {
                 return new Validation(false, "There can only be one fee transaction per block.");
             }
 
-            if (feeTxs[0].to !== this.miner)
+            if (!feeTxs[0].txOutputs.some(txo => txo.toAddress === this.miner))
                 return new Validation(false, "Invalid fee tx: different from miner. The fee transaction must be sent to the person who mined the block.");
+
+            // TODO: Colocar a validação de quantidade de taxas
 
             let validations = this.transactions.map(tx => tx.isValid());
             const erros = validations.filter(v => !v.success).map(v => v.message);

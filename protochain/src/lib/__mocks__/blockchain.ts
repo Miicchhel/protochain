@@ -17,23 +17,19 @@ export default class Blockchain {
     /**
      * Mocked Blockchain constructor
      */
-    constructor() {
-        this.mempool = [];
-        this.blocks = [
+    constructor(miner: string) {
+        this.blocks = [];
+        this.mempool = [new Transaction()];
+
+        this.blocks.push(
             new Block({
                 index: 0,
-                hash: "mockBlockchainHash",
+                hash: "mock_Blockchain_Hash",
                 previousHash: "", 
-                transactions: [ 
-                    new Transaction({
-                        type: TransactionType.FEE,
-                        to: `['Genesis block', ${new Date().toString()}]`,
-                        hash: "Genesis_transaction_mock_hash",
-                    } as Transaction)
-                ],
+                miner: miner,
                 timestamp: Date.now()
             } as Block)
-        ];
+        );
         this.nextIndex++;
     }
 
@@ -81,13 +77,19 @@ export default class Blockchain {
      * @returns block if found, undefined otherwise
      */
     getBlock(hash: string): Block | undefined {
+        if (!hash || hash === "-1")
+            return undefined;
+
         return this.blocks.find(block => block.hash === hash);
     }
 
     getTransaction(hash: string): TransactionSearch {
+        if (hash === "-1")
+            return {mempoolIndex: -1, blockIndex: -1} as TransactionSearch;
+        
         return {
             mempoolIndex: 0,
-            transaction: { hash }
+            transaction: new Transaction()
         } as TransactionSearch
     }
 
@@ -115,12 +117,7 @@ export default class Blockchain {
         const index = this.blocks.length;
         const previousHash = this.getLastBlock().hash
         const feePerTx = this.getFeePerTx();
-        const transactions = [
-            new Transaction({
-                to: "Michel",
-                txInput: new TransactionInput()
-            } as Transaction)
-        ]
+        const transactions = this.mempool.slice(0, 2);
 
         return {
             index,

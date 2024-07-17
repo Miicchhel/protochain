@@ -13,12 +13,14 @@ export default class TransactionInput {
     fromAddress: string;
     amount: number;
     signature: string;
+    previousTx: string;
 
     /**
      * Creates a new TransactionInput
      * @param txInput the transaction input data
      */
     constructor(txInput?: TransactionInput) {
+        this.previousTx = txInput ? txInput.previousTx : "xyz";
         this.fromAddress = txInput?.fromAddress || "carteira1";
         this.amount = txInput?.amount || 10;
         this.signature = txInput?.signature || "abc";
@@ -44,11 +46,14 @@ export default class TransactionInput {
      * @returns Returns a validation result objeect
      */
     isValid(): Validation {
+        if (!this.previousTx)
+            return new Validation(false, "Mock Previous tx is required");
+
         if (!this.signature)
-            return new Validation(false, "Signature is required");
+            return new Validation(false, "Mock Signature is required");
 
         if (this.amount < 1)
-            return new Validation(false, "Amount must be greater than 0");
+            return new Validation(false, "Mock Amount must be greater than 0");
 
         return new Validation();
     }

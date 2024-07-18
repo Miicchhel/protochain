@@ -1,8 +1,9 @@
-import { describe, test, expect, jest } from "@jest/globals"
+import { describe, test, expect, jest, beforeAll } from "@jest/globals"
 import Blockchain from "../src/lib/blockchain";
 import Block from "../src/lib/block";
 import Transaction from "../src/lib/transaction";
 import TransactionInput from "../src/lib/transactionInput";
+import Wallet from "../src/lib/wallet";
 
 jest.mock("../src/lib/block");
 jest.mock("../src/lib/transaction");
@@ -10,14 +11,19 @@ jest.mock("../src/lib/transactionInput");
 
 
 describe("Blockchain tests", () => {
+
+    let Alice: Wallet;
+    beforeAll(() => {
+        Alice = new Wallet();
+    });
     
     test("Should has genesis blocks", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
         expect(blockchain.blocks.length).toBe(1);
     });
 
     test("Should be valid (genesis)", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
         const valid = blockchain.isValid();
 
         expect(valid.message).toBe("");
@@ -26,10 +32,10 @@ describe("Blockchain tests", () => {
     });
 
     test("Should be valid (add block)", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
 
         let tx = new Transaction({
-            to: "Michel"
+            txInputs: [new TransactionInput()],
         } as Transaction);
         blockchain.mempool.push(tx);
 
@@ -41,7 +47,7 @@ describe("Blockchain tests", () => {
         blockchain.addBlock(new Block(blockData));
 
         tx = new Transaction({
-            to: "Michel"
+            txInputs: [new TransactionInput()],
         } as Transaction);
         blockchain.mempool.push(tx);
 
@@ -58,17 +64,23 @@ describe("Blockchain tests", () => {
     });
 
     test("Should not be valid (add block): index error", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
 
         let blockData = {
-            index: -1,
             previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash,
             transactions: [
                 new Transaction({ 
-                    to: "Michel" 
+                    txInputs: [new TransactionInput()], 
                 } as Transaction)
             ]
         } as Block;
+
+        let tx = new Transaction({
+            txInputs: [new TransactionInput()],
+        } as Transaction);
+        blockchain.mempool.push(tx);
+
+        blockData.index = -1;
         let valid = blockchain.addBlock(new Block(blockData));
         
         expect(valid.success).toBe(false);
@@ -78,17 +90,23 @@ describe("Blockchain tests", () => {
 
 
     test("Should not be valid (add block): previous hash error", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
     
         let blockData = {
             index: 1,
             previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash + '1',
             transactions: [
                 new Transaction({ 
-                    to: "Michel"
+                    txInputs: [new TransactionInput()],
                 } as Transaction)
             ]
         } as Block;
+
+        let tx = new Transaction({
+            txInputs: [new TransactionInput()],
+        } as Transaction);
+        blockchain.mempool.push(tx);
+
         let valid = blockchain.addBlock(new Block(blockData));
 
         expect(valid.success).toBe(false);
@@ -97,10 +115,10 @@ describe("Blockchain tests", () => {
     });
 
     test("Should not be valid (add block): invalid mempool", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
 
         const tx = new Transaction({ 
-            to: "Michel",
+            txInputs: [new TransactionInput()],
             hash: 'mockHash_teste'
         } as Transaction)
 
@@ -111,8 +129,7 @@ describe("Blockchain tests", () => {
             previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash,
             transactions: [
                 new Transaction({ 
-                    to: "Michel",
-                    txInput: new TransactionInput()
+                    txInputs: [new TransactionInput()],
                 } as Transaction)
             ]
         } as Block;
@@ -121,16 +138,36 @@ describe("Blockchain tests", () => {
         expect(valid.success).toBe(false);
         expect(blockchain.blocks.length).toEqual(1);
         expect(valid.message).toBe("Invalid mempool. The block contains invalid transactions.");
+    });
+
+    test("Should not be valid (add block): no next block", () => {
+        const blockchain = new Blockchain(Alice.publicKey);
+
+        let blockData = {
+            index: 1,
+            previousHash:blockchain.blocks[blockchain.blocks.length - 1].hash,
+            transactions: [
+                new Transaction({ 
+                    txInputs: [new TransactionInput()],
+                } as Transaction)
+            ]
+        } as Block;
+        let valid = blockchain.addBlock(new Block(blockData));
+
+        expect(valid.success).toBe(false);
+        expect(blockchain.blocks.length).toEqual(1);
+        expect(valid.message).toBe("There is no next block info.");
     });    
 
     test("Should be valid", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
 
         for (let i = 1; i <= 5; i++) {
 
             let tx = new Transaction({
-                to: `Michel ${i}`,
-                txInput: new TransactionInput()
+                txInputs: [new TransactionInput({
+                    fromAddress: `Michel ${i}`
+                } as TransactionInput)],
             } as Transaction)    
             blockchain.mempool.push(tx);
 
@@ -150,12 +187,14 @@ describe("Blockchain tests", () => {
     });
 
     test("Should not be valid", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
         
         for (let i = 1; i <= 5; i++) {
 
             let tx = new Transaction({ 
-                to: `Michel ${i}`
+                txInputs: [new TransactionInput({
+                    fromAddress: `Michel ${i}`
+                } as TransactionInput)],
             } as Transaction)    
             blockchain.mempool.push(tx);
             
@@ -176,11 +215,11 @@ describe("Blockchain tests", () => {
     });
 
     test("Should add transaction", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
         blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
         
         const tx = new Transaction({ 
-            to: "Michel",
+            txInputs: [new TransactionInput()],
         } as Transaction)
         const validation = blockchain.addTransaction(tx);
 
@@ -188,23 +227,23 @@ describe("Blockchain tests", () => {
     });
 
     test("Should NOT add transaction (pending tx)", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
         blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
 
         const tx = new Transaction({ 
-            to: "Michel1",
+            txInputs: [new TransactionInput()],
         } as Transaction)
         blockchain.addTransaction(tx);
 
         const tx2 = new Transaction({ 
-            to: "Michel2",
+            txInputs: [new TransactionInput()],
             hash: 'mock_test_pending_tx'
         } as Transaction)
         blockchain.addTransaction(tx2);
 
 
         const tx3 = new Transaction({ 
-            to: "Michel3",
+            txInputs: [new TransactionInput()],
             hash: 'mock_test_pending_tx'
         } as Transaction)
 
@@ -215,23 +254,26 @@ describe("Blockchain tests", () => {
     });
 
     test("Should NOT add transaction (invalid tx)", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
         blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
      
         const tx = new Transaction({ 
-            to: "",
+            txInputs: [new TransactionInput()],
         } as Transaction)
+        
+        tx.hash = ''
+
         const validation = blockchain.addTransaction(tx);
 
         expect(validation.success).toBe(false);
-        expect(validation.message).toEqual("Invalid transaction: The mock transaction 'to' is invalid.")
+        expect(validation.message).toEqual("Invalid transaction: Invalid mock transaction.")
     });
 
     test("Should NOT add transaction (duplicated in blockchain)", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
      
         const tx = new Transaction({ 
-            to: `Michel`,
+            txInputs: [new TransactionInput()],
         } as Transaction)
         const validation = blockchain.addTransaction(tx);
 
@@ -240,11 +282,11 @@ describe("Blockchain tests", () => {
     });
 
     test("Should NOT add transaction (duplicated in mempool)", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
         blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
      
         const tx = new Transaction({ 
-            to: `Michel`,
+            txInputs: [new TransactionInput()],
         } as Transaction)
 
         blockchain.mempool.push(tx);
@@ -255,11 +297,11 @@ describe("Blockchain tests", () => {
     });
 
     test("Should get transaction (mempool)", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
         blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
        
         const tx = new Transaction({ 
-            to: `Michel`,
+            txInputs: [new TransactionInput()],
         } as Transaction)
         blockchain.addTransaction(tx);
 
@@ -269,11 +311,11 @@ describe("Blockchain tests", () => {
     });
 
     test("Should get transaction (blockchain)", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
         blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
        
         const tx = new Transaction({ 
-            to: `Michel`,
+            txInputs: [new TransactionInput()],
         } as Transaction)
         blockchain.addTransaction(tx);
 
@@ -290,7 +332,7 @@ describe("Blockchain tests", () => {
     });
 
     test("Should NOT get transaction", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
 
         const result = blockchain.getTransaction('transaction_mock_hashs');
         
@@ -299,13 +341,13 @@ describe("Blockchain tests", () => {
     });
 
     test("Should get block", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
         const block = blockchain.getBlock(blockchain.blocks[0].hash);
         expect(block).toEqual(blockchain.blocks[0]);
     });
 
     test("Should get next block info", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
 
         blockchain.mempool.push(new Transaction());
         
@@ -314,7 +356,7 @@ describe("Blockchain tests", () => {
     });
 
     test("Should NOT get next block info", () => {
-        const blockchain = new Blockchain();
+        const blockchain = new Blockchain(Alice.publicKey);
         const info = blockchain.getNextBlock();
         expect(info).toBeNull();
     });

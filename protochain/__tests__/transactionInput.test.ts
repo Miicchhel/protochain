@@ -17,6 +17,7 @@ describe("TransactionInput tests", () => {
         const txInput = new TransactionInput({
             amount: 10,
             fromAddress: Alice.publicKey,
+            previousTx: 'abc'
         } as TransactionInput);
 
         txInput.sign(Alice.privateKey);        
@@ -38,7 +39,7 @@ describe("TransactionInput tests", () => {
 
         expect(valid.success).toBe(false);
         expect(valid.success).toBeFalsy();
-        expect(valid.message).toBe("Amount must be greater than 0");
+        expect(valid.message).toBe("Previous tx is required");
     });
 
     test("should NOT be valid (empty signature)", () => {
@@ -46,6 +47,7 @@ describe("TransactionInput tests", () => {
         const txInput = new TransactionInput({
             amount: 10,
             fromAddress: Alice.publicKey,
+            previousTx: 'abc'
         } as TransactionInput);
 
         const valid = txInput.isValid();
@@ -60,6 +62,7 @@ describe("TransactionInput tests", () => {
         const txInput = new TransactionInput({
             amount: -10,
             fromAddress: Alice.publicKey,
+            previousTx: 'abc'
         } as TransactionInput);
 
         txInput.sign(Alice.privateKey);
@@ -76,6 +79,7 @@ describe("TransactionInput tests", () => {
         const txInput = new TransactionInput({
             amount: 10,
             fromAddress: Alice.publicKey,
+            previousTx: 'abc'
         } as TransactionInput);
 
         txInput.sign(Bob.privateKey);        

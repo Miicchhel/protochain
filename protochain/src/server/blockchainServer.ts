@@ -68,7 +68,7 @@ app.get('/blocks/:indexOrHash', (req: Request, res: Response, _next: NextFunctio
  * Get /transactions/:hash? - Should get transaction specified from the hash or the next transactions contained in the mempool
   */
 app.get('/transactions/:hash?', (req: Request, res: Response, _next: NextFunction) => {
-    if (req.params.hash) {
+    if (req.params.hash) {        
         res.json(blockchain.getTransaction(req.params.hash));
     } else {
         res.json({
@@ -94,7 +94,7 @@ app.post('/blocks', (req: Request, res: Response, _next: NextFunction) => {
  * Post /transactions - Should add transaction
  */
 app.post('/transactions', (req: Request, res: Response, _next: NextFunction) => {
-    if (req.body.hash === undefined) return res.status(422).send('Unprocessable Entity: Invalid or incomplete data. Missing hash!');
+    if (req.body.hash === undefined || req.body.hash === '') return res.status(422).send('Unprocessable Entity: Invalid or incomplete data. Missing hash!');
     
     const tx = new Transaction(req.body as Transaction);
     const validation = blockchain.addTransaction(tx);

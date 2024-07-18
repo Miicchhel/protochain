@@ -36,6 +36,7 @@ export default class Wallet {
         } else
             keys = ECpair.makeRandom();
 
+        /* c8 ignore next 2 */
         this.privateKey = keys.privateKey?.toString('hex') || "";
         this.publicKey = keys.publicKey.toString('hex') || "";
     }

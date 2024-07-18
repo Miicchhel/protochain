@@ -28,7 +28,7 @@ export default class Transaction {
     isValid(): Validation {       
         
         if (this.timestamp < 1 || !this.hash)
-            return new Validation(false, "Invalid mock tnransaction.");
+            return new Validation(false, "Invalid mock transaction.");
 
         return new Validation();
     }

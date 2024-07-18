@@ -4,11 +4,13 @@ import { app } from '../src/server/blockchainServer';
 import Block from '../src/lib/block';
 import Transaction from '../src/lib/transaction';
 import TransactionInput from '../src/lib/transactionInput';
+import TransactionOutput from '../src/lib/transactionOutput';
 
 jest.mock('../src/lib/block');
 jest.mock('../src/lib/blockchain');
 jest.mock('../src/lib/transaction');
 jest.mock('../src/lib/transactionInput');
+jest.mock('../src/lib/transactionOutput');
 
 describe("BlockchainServer tests", () => {
     test('GET /status - Should return status', async () => {
@@ -33,10 +35,10 @@ describe("BlockchainServer tests", () => {
     });
 
     test('Get /blocks/:hash - Should get block', async () => {
-        const response = await request(app).get('/blocks/mockBlockchainHash');
+        const response = await request(app).get('/blocks/mock_Blockchain_Hash');        
         
         expect(response.statusCode).toBe(200);
-        expect(response.body.hash).toEqual("mockBlockchainHash");
+        expect(response.body.hash).toEqual("mock_Blockchain_Hash");
     });
 
     test('Get /blocks/:index - Should NOT get block', async () => {
@@ -70,7 +72,7 @@ describe("BlockchainServer tests", () => {
     });
 
     test('Get /transactions/:hash - Should get transaction', async () => {
-        const response = await request(app).get('/transactions/Genesis_transaction_mock_hash');
+        const response = await request(app).get('/transactions/mock_Blockchain_Hash');
 
         expect(response.statusCode).toBe(200);
         expect(response.body.mempoolIndex).toEqual(0);
@@ -80,13 +82,13 @@ describe("BlockchainServer tests", () => {
         const response = await request(app).get('/transactions');
 
         expect(response.statusCode).toBe(200);
-        expect(response.body).toEqual({ next: [], total: 0 });
+        expect(response.body.total).toEqual(1);
     });
 
     test('Post /transactions - Should add tx', async () => {
         const tx = new Transaction({
-            to: 'Michel',
-            txInput: new TransactionInput()
+            txOutputs: [new TransactionOutput()],
+            txInputs: [new TransactionInput()]
         } as Transaction);
         const response = await request(app).post('/transactions').send(tx);
         
@@ -95,12 +97,12 @@ describe("BlockchainServer tests", () => {
     });
 
     test('Post /transactions - Should NOT add tx (hash missing)', async () => {
-        const tx = {
-            type: 1,
-            timestamp: Date.now(),
-            to: 'Michel',
-            hash: undefined
-        } as unknown as Transaction
+        const tx = new Transaction({
+            txOutputs: [new TransactionOutput()],
+            txInputs: [new TransactionInput()]
+        } as Transaction);
+
+        tx.hash = '';        
 
         const response = await request(app).post('/transactions').send(tx);
 
@@ -109,19 +111,16 @@ describe("BlockchainServer tests", () => {
     });
 
     test('Post /transactions - Should NOT add tx (tx invalid)', async () => {
-        const tx = new Transaction({
-            type: 1,
-            timestamp: Date.now(),
-            to: 'Michel',
-            txInput: new TransactionInput(),
-            hash: ''
+        let tx = new Transaction({
+            txOutputs: [new TransactionOutput()],
+            txInputs: [new TransactionInput()]
         } as Transaction);
 
-
-        if(tx.txInput) tx.txInput.amount = -1;
+        tx.timestamp = -1;
 
         const response = await request(app).post('/transactions').send(tx);
+        
         expect(response.statusCode).toBe(400);
-        expect(response.body).toEqual({ error: "Invalid mock transaction: The mock transaction 'txInput' is invalid." });
+        expect(response.body).toEqual({ error: "Invalid mock transaction: Invalid mock transaction." });
     });
 });

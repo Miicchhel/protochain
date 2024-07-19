@@ -2,6 +2,7 @@ import * as ecc from 'tiny-secp256k1';
 import ECPairFactory from 'ecpair';
 import sha256 from 'crypto-js/sha256';
 import Validation from './validation';
+import TransactionOutput from './transactionOutput';
 
 const ECpair = ECPairFactory(ecc);
 
@@ -13,12 +14,14 @@ export default class TransactionInput {
     fromAddress: string;
     amount: number;
     signature: string;
+    previousTx: string;
 
     /**
      * Creates a new TransactionInput
      * @param txInput the transaction input data
      */
     constructor(txInput?: TransactionInput) {
+        this.previousTx = txInput ? txInput.previousTx : "";
         this.fromAddress = txInput ? txInput.fromAddress : "";
         this.amount = txInput ? txInput.amount : 0;
         this.signature = txInput ? txInput.signature : "";
@@ -38,7 +41,7 @@ export default class TransactionInput {
      * Generates the hash of the tx input
      */
     getHash(): string {
-        return sha256(this.fromAddress + this.amount).toString();
+        return sha256(this.previousTx + this.fromAddress + this.amount).toString();
     }
 
     /**
@@ -46,6 +49,9 @@ export default class TransactionInput {
      * @returns Returns a validation result objeect
      */
     isValid(): Validation {
+        if (!this.previousTx)
+            return new Validation(false, "Previous tx is required");
+
         if (!this.signature)
             return new Validation(false, "Signature is required");
 
@@ -57,5 +63,13 @@ export default class TransactionInput {
             .verify(hash, Buffer.from(this.signature, "hex"));
 
         return isValid ? new Validation() : new Validation(false, "Invalid tx input signature");
+    }
+
+    static fromTxo(txo: TransactionOutput): TransactionInput {
+        return new TransactionInput({
+            amount: txo.amount,
+            fromAddress: txo.toAddress,
+            previousTx: txo.tx
+        } as TransactionInput);
     }
 }

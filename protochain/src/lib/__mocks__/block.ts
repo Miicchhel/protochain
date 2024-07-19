@@ -10,6 +10,8 @@ export default class Block {
     previousHash: string;
     transactions: Transaction[];
     hash: string;
+    miner: string;
+
 
     /**
      * Mock Block constructor
@@ -20,7 +22,12 @@ export default class Block {
             this.timestamp = block?.timestamp || Date.now();
             this.previousHash = block?.previousHash || "";
             this.transactions = block?.transactions || [] as Transaction[];
+            this.miner = block?.miner || "mock_block_miner";
             this.hash = block?.hash || this.getHash();
+    }
+
+    mine(difficulty: number, miner: string): void {
+        this.miner = miner;
     }
 
     /**
@@ -36,9 +43,9 @@ export default class Block {
     *
     * @returns If the Mock block is valid, false otherwise
     */
-    isValid(previousHash: string, previousIndex: number): Validation {
+    isValid(previousHash: string, previousIndex: number, feePerTx: number): Validation {
 
-        if(this.previousHash !== previousHash || previousIndex < 0 || this.index < 0) {
+        if(this.previousHash !== previousHash || previousIndex < 0 || this.index < 0 || feePerTx < 1) {
             return new Validation(false, "The mock block (index | previousHash) is invalid");
         }
         return new Validation();

@@ -25,11 +25,23 @@ export default class Transaction {
         return 'transaction_mock_hash';
     }
 
-    isValid(): Validation {       
+    isValid(difficulty: number, totalFees: number): Validation {       
         
-        if (this.timestamp < 1 || !this.hash)
+        if (this.timestamp < 1 || !this.hash || difficulty < 1 || totalFees < 0)
             return new Validation(false, "Invalid mock transaction.");
 
         return new Validation();
+    }
+
+    static fromReward(txo: TransactionOutput): Transaction {
+        const tx = new Transaction({
+            type: TransactionType.FEE,
+            txOutputs: [txo]
+        } as Transaction)
+
+        tx.txInputs = undefined;
+        tx.hash = tx.getHash();
+        tx.txOutputs[0].tx = tx.hash;
+        return tx;
     }
 }

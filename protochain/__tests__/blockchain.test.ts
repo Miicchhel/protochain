@@ -1,13 +1,15 @@
 import { describe, test, expect, jest, beforeAll } from "@jest/globals"
-import Blockchain from "../src/lib/blockchain";
 import Block from "../src/lib/block";
+import Blockchain from "../src/lib/blockchain";
 import Transaction from "../src/lib/transaction";
 import TransactionInput from "../src/lib/transactionInput";
+import TransactionOutput from "../src/lib/transactionOutput";
 import Wallet from "../src/lib/wallet";
 
 jest.mock("../src/lib/block");
 jest.mock("../src/lib/transaction");
 jest.mock("../src/lib/transactionInput");
+jest.mock("../src/lib/transactionOutput");
 
 
 describe("Blockchain tests", () => {
@@ -214,15 +216,27 @@ describe("Blockchain tests", () => {
         expect(valid.message).not.toBe("");
     });
 
-    test("Should add transaction", () => {
+    test.only("Should add transaction", () => {
         const blockchain = new Blockchain(Alice.publicKey);
-        blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
+        // blockchain.blocks[0].transactions[0].hash = "Genesis_transaction_mock_hash"
         
-        const tx = new Transaction({ 
-            txInputs: [new TransactionInput()],
-        } as Transaction)
-        const validation = blockchain.addTransaction(tx);
+        const txo = blockchain.blocks[0].transactions[0];
+        
+        const tx = new Transaction()
+        tx.txInputs = [new TransactionInput({
+            amount: 50,
+            previousTx: txo.hash,
+            fromAddress: Alice.publicKey,
+            signature: 'abc'
+        } as TransactionInput)]
 
+        tx.txOutputs = [new TransactionOutput({
+            amount: 100,
+            toAddress: 'abc'
+        } as TransactionOutput)]
+        
+        const validation = blockchain.addTransaction(tx);    
+        
         expect(validation.success).toBe(true);
     });
 

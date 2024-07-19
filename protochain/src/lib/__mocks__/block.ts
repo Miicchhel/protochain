@@ -43,9 +43,9 @@ export default class Block {
     *
     * @returns If the Mock block is valid, false otherwise
     */
-    isValid(previousHash: string, previousIndex: number): Validation {
+    isValid(previousHash: string, previousIndex: number, feePerTx: number): Validation {
 
-        if(this.previousHash !== previousHash || previousIndex < 0 || this.index < 0) {
+        if(this.previousHash !== previousHash || previousIndex < 0 || this.index < 0 || feePerTx < 1) {
             return new Validation(false, "The mock block (index | previousHash) is invalid");
         }
         return new Validation();

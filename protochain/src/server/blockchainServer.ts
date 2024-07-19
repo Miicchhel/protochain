@@ -23,7 +23,10 @@ if (process.argv.includes('--run')) {
     app.use(morgan('tiny'));
 
     // hostname -I: get the computer's IP address
-    app.listen(PORT, '0.0.0.0', () => { console.log(`Blockchain server is running at ${PORT}.\nWallet: ${wallet.publicKey}`); });
+    app.listen(PORT, '0.0.0.0', () => {
+        console.clear();        
+        console.log(`Blockchain server is running at ${PORT}.\nWallet: ${wallet.publicKey}`); 
+    });
 }
 app.use(express.json());
 
